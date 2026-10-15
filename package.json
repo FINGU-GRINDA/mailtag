@@ -1,0 +1,32 @@
+{
+  "name": "@fingu-grinda/mailtag",
+  "version": "1.0.0",
+  "description": "Rinda mail link UTM tagging (single source)",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "devDependencies": {
+    "typescript": "5.7.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FINGU-GRINDA/mailtag.git"
+  }
+}

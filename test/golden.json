@@ -1,0 +1,191 @@
+{
+  "_doc": "린다 메일 링크 UTM(mailtag) 정답 목록(2026-10-15 결정). 이 패키지의 mailTagUrl 이 cases 를 그대로 만들고 errors 를 전부 거절해야 한다. 규칙을 바꿀 때는 이 파일을 먼저 고친다.",
+  "cases": [
+    {
+      "name": "coldmail 기본",
+      "in": {
+        "kind": "coldmail",
+        "url": "https://rinda.ai/pricing",
+        "campaignName": "kbeauty_jp",
+        "sendDate": "20261015"
+      },
+      "out": "https://rinda.ai/pricing?utm_source=email&utm_medium=email&utm_campaign=coldmail&utm_content=kbeauty_jp_20261015"
+    },
+    {
+      "name": "coldmail 버튼 위치",
+      "in": {
+        "kind": "coldmail",
+        "url": "https://app.rinda.ai/",
+        "campaignName": "kbeauty_jp",
+        "sendDate": "20261015",
+        "term": "main_trial"
+      },
+      "out": "https://app.rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=coldmail&utm_content=kbeauty_jp_20261015&utm_term=main_trial"
+    },
+    {
+      "name": "followup 1:1 팔로업",
+      "in": {
+        "kind": "followup",
+        "url": "https://app.rinda.ai/",
+        "company": "acme",
+        "sendDate": "20261015"
+      },
+      "out": "https://app.rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=acme_20261015"
+    },
+    {
+      "name": "followup 서명 링크",
+      "in": {
+        "kind": "followup",
+        "url": "https://rinda.ai/",
+        "company": "globex",
+        "sendDate": "20261016",
+        "term": "txt_signature"
+      },
+      "out": "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=globex_20261016&utm_term=txt_signature"
+    },
+    {
+      "name": "기존 utm 제거·다른 쿼리·fragment 보존",
+      "in": {
+        "kind": "followup",
+        "url": "https://rinda.ai/pricing?ref=x&utm_source=old&utm_campaign=coldmail#plans",
+        "company": "initech",
+        "sendDate": "20261015"
+      },
+      "out": "https://rinda.ai/pricing?ref=x&utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=initech_20261015#plans"
+    },
+    {
+      "name": "린다레터 회차",
+      "in": {
+        "kind": "letter",
+        "url": "https://rinda.ai/blog/find-buyers",
+        "campaign": "20261015",
+        "content": "find_buyers",
+        "term": "img_find_buyers",
+        "id": "nl"
+      },
+      "out": "https://rinda.ai/blog/find-buyers?utm_source=letter&utm_medium=email&utm_campaign=20261015&utm_content=find_buyers&utm_term=img_find_buyers&utm_id=nl"
+    },
+    {
+      "name": "릴리즈노트",
+      "in": {
+        "kind": "release",
+        "url": "https://app.rinda.ai/",
+        "campaign": "20261015",
+        "term": "main_open_app",
+        "id": "u1"
+      },
+      "out": "https://app.rinda.ai/?utm_source=release&utm_medium=email&utm_campaign=20261015&utm_term=main_open_app&utm_id=u1"
+    },
+    {
+      "name": "웰컴 파트너스 A/B",
+      "in": {
+        "kind": "welcome",
+        "url": "https://rinda.ai/partners",
+        "campaign": "welcome",
+        "content": "partners_link_a",
+        "term": "bnr_a",
+        "id": "w3"
+      },
+      "out": "https://rinda.ai/partners?utm_source=welcome&utm_medium=email&utm_campaign=welcome&utm_content=partners_link_a&utm_term=bnr_a&utm_id=w3"
+    },
+    {
+      "name": "라이프사이클 넛지",
+      "in": {
+        "kind": "lifecycle",
+        "url": "https://app.rinda.ai/upgrade",
+        "campaign": "trial_ending_1day",
+        "term": "main_upgrade",
+        "id": "n1"
+      },
+      "out": "https://app.rinda.ai/upgrade?utm_source=lifecycle&utm_medium=email&utm_campaign=trial_ending_1day&utm_term=main_upgrade&utm_id=n1"
+    },
+    {
+      "name": "시스템 메일 기능 안내",
+      "in": {
+        "kind": "system",
+        "url": "https://app.rinda.ai/settings/billing",
+        "campaign": "billing_grace",
+        "term": "txt_billing",
+        "id": "s1"
+      },
+      "out": "https://app.rinda.ai/settings/billing?utm_source=system&utm_medium=email&utm_campaign=billing_grace&utm_term=txt_billing&utm_id=s1"
+    },
+    {
+      "name": "비회원 무료도구 결과",
+      "in": {
+        "kind": "lead",
+        "url": "https://www.rinda.ai/tools/hs-code-finder/result/abc",
+        "campaign": "freetool_hs_code_finder",
+        "term": "main_view_result",
+        "id": "f1"
+      },
+      "out": "https://www.rinda.ai/tools/hs-code-finder/result/abc?utm_source=lead&utm_medium=email&utm_campaign=freetool_hs_code_finder&utm_term=main_view_result&utm_id=f1"
+    },
+    {
+      "name": "비회원 리드마그넷",
+      "in": {
+        "kind": "lead",
+        "url": "https://app.rinda.ai/",
+        "campaign": "leadmagnet",
+        "content": "prompts_500",
+        "term": "sub_signup",
+        "id": "l1"
+      },
+      "out": "https://app.rinda.ai/?utm_source=lead&utm_medium=email&utm_campaign=leadmagnet&utm_content=prompts_500&utm_term=sub_signup&utm_id=l1"
+    }
+  ],
+  "errors": [
+    {
+      "name": "한글 content",
+      "in": {
+        "kind": "letter",
+        "url": "https://rinda.ai/",
+        "campaign": "20261015",
+        "content": "린다홈"
+      }
+    },
+    {
+      "name": "대문자 term",
+      "in": {
+        "kind": "lifecycle",
+        "url": "https://rinda.ai/",
+        "campaign": "welcome",
+        "term": "Main_Home"
+      }
+    },
+    {
+      "name": "coldmail 에 id",
+      "in": {
+        "kind": "coldmail",
+        "url": "https://rinda.ai/",
+        "campaignName": "kbeauty_jp",
+        "sendDate": "20261015",
+        "id": "cm"
+      }
+    },
+    {
+      "name": "coldmail 날짜 형식",
+      "in": {
+        "kind": "coldmail",
+        "url": "https://rinda.ai/",
+        "campaignName": "kbeauty_jp",
+        "sendDate": "2026-10-15"
+      }
+    },
+    {
+      "name": "followup 고객사 없음",
+      "in": {
+        "kind": "followup",
+        "url": "https://rinda.ai/",
+        "sendDate": "20261015"
+      }
+    },
+    {
+      "name": "모르는 kind",
+      "in": {
+        "kind": "partners_t1",
+        "url": "https://rinda.ai/"
+      }
+    }
+  ]
+}
