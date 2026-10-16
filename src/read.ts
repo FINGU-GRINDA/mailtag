@@ -24,7 +24,7 @@ function low(value: Maybe): string {
  */
 export type LegacyFollowupSlugs = readonly string[]
 
-/** content 가 옛 팔로업 슬러그(그 자체 또는 `<슬러그>_…`)인가. */
+/** content 가 옛 팔로업 슬러그(그 자체 또는 `<슬러그>_<YYYYMMDD>`)인가. `<슬러그>_jp_…` 같은 새 캠페인명은 아니다. */
 export function isLegacyFollowupContent({
   content,
   slugs,
@@ -36,7 +36,7 @@ export function isLegacyFollowupContent({
   if (!c) return false
   return slugs.some((raw) => {
     const s = low(raw)
-    return s !== "" && (c === s || c.startsWith(`${s}_`))
+    return s !== "" && (c === s || (c.startsWith(`${s}_`) && /^\d{8}$/.test(c.slice(s.length + 1))))
   })
 }
 

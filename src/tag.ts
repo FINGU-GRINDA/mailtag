@@ -52,6 +52,17 @@ export const LEAD_MAIL_SOURCES: readonly string[] = ["lead"]
 export const MAIL_TAG_SAFE = /^[a-z0-9_]+$/
 const SEND_DATE = /^\d{8}$/
 
+/** KST 달력일 `YYYYMMDD` 인가 — 8자리이면서 실제 달력에 있는 날(20261399 ✗, 20240229 ✓). */
+export function isKstDateStamp(value: string | null | undefined): boolean {
+  const v = value ?? ""
+  if (!SEND_DATE.test(v)) return false
+  const y = Number(v.slice(0, 4))
+  const m = Number(v.slice(4, 6))
+  const d = Number(v.slice(6, 8))
+  const dt = new Date(Date.UTC(y, m - 1, d))
+  return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d
+}
+
 /** UTM 축의 고정 순서. */
 export const UTM_ORDER = [
   "utm_source",
@@ -93,8 +104,8 @@ function salesAxes(input: MailTagInput): { campaign: string; content: string } {
   if (input.id) {
     throw new Error(`mailtag: ${input.kind} 메일에는 utm_id 를 달지 않는다`)
   }
-  if (!SEND_DATE.test(input.sendDate ?? "")) {
-    throw new Error(`mailtag: sendDate 는 YYYYMMDD 여야 한다 (${input.sendDate})`)
+  if (!isKstDateStamp(input.sendDate)) {
+    throw new Error(`mailtag: sendDate 는 달력에 있는 YYYYMMDD 여야 한다 (${input.sendDate})`)
   }
   const name = input.kind === "coldmail" ? input.campaignName : input.company
   if (!name) {

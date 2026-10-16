@@ -8,6 +8,7 @@
 export {
   coldmailTagUrl,
   followupTagUrl,
+  isKstDateStamp,
   isMailKind,
   LEAD_MAIL_SOURCES,
   MAIL_KIND_SOURCE,

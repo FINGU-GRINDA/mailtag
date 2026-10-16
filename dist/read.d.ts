@@ -13,7 +13,7 @@ type Maybe = string | null | undefined;
  * 목록은 더 늘지 않는다.
  */
 export type LegacyFollowupSlugs = readonly string[];
-/** content 가 옛 팔로업 슬러그(그 자체 또는 `<슬러그>_…`)인가. */
+/** content 가 옛 팔로업 슬러그(그 자체 또는 `<슬러그>_<YYYYMMDD>`)인가. `<슬러그>_jp_…` 같은 새 캠페인명은 아니다. */
 export declare function isLegacyFollowupContent({ content, slugs, }: {
     content: Maybe;
     slugs: LegacyFollowupSlugs;

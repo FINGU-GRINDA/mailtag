@@ -5,7 +5,9 @@
  * 발송 전·테스트에서 이 게이트로 한 번 더 걸러 규칙 밖 링크가 나가지 않게 한다.
  * 컴포넌트는 링크에 `data-mds="<자리>"` 를 달고, `checkEmailUtm` 이 그 표시로 자리 규칙까지 본다.
  */
-import { LEAD_MAIL_SOURCES, MAIL_TAG_SAFE, PRODUCT_MAIL_SOURCES, UTM_ORDER } from "./tag.js";
+import { isKstDateStamp, LEAD_MAIL_SOURCES, MAIL_TAG_SAFE, PRODUCT_MAIL_SOURCES, UTM_ORDER } from "./tag.js";
+/** 세일즈 메일 content — `<이름>_<YYYYMMDD>`. */
+const SALES_CONTENT = /^[a-z0-9_]+_(\d{8})$/;
 import { MAIL_TERM_RULE } from "./term.js";
 /** href 안의 HTML 엔티티를 푼다(`&amp;` → `&` 등). */
 export function decodeEntities(text) {
@@ -53,6 +55,13 @@ export function mailTagErrors(url) {
         if (p.has("utm_id")) {
             errors.push(`세일즈 메일에는 utm_id 가 없어야 한다`);
         }
+        const date = (p.get("utm_content") ?? "").match(SALES_CONTENT)?.[1];
+        if (!date) {
+            errors.push(`세일즈 메일 content 는 <이름>_<YYYYMMDD> 여야 한다`);
+        }
+        else if (!isKstDateStamp(date)) {
+            errors.push(`세일즈 메일 content 의 날짜 「${date}」 는 달력에 없는 날이다`);
+        }
     }
     else if (keys[keys.length - 1] !== "utm_id") {
         errors.push(`제품·리드 메일은 utm_id 가 맨 끝이어야 한다`);
@@ -65,7 +74,7 @@ export function checkEmailUtm(html) {
     for (const m of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)) {
         const attrs = m[1] ?? "";
         const inner = m[2] ?? "";
-        const href = attrs.match(/href="([^"]*)"/i)?.[1];
+        const href = attrs.match(/href=(["'])(.*?)\1/i)?.[2];
         if (!href)
             continue;
         const role = attrs.match(/data-mds="([^"]*)"/i)?.[1];
