@@ -8,7 +8,7 @@ const golden = JSON.parse(readFileSync(new URL("./golden.json", import.meta.url)
 
 test("정답 목록 크기", () => {
   assert.equal(golden.cases.length, 12)
-  assert.equal(golden.errors.length, 6)
+  assert.equal(golden.errors.length, 7)
 })
 
 for (const c of golden.cases) {

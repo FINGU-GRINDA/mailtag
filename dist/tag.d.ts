@@ -39,6 +39,8 @@ export declare const PRODUCT_MAIL_SOURCES: readonly string[];
 export declare const LEAD_MAIL_SOURCES: readonly string[];
 /** campaign·content·term·id 에 허용되는 값. */
 export declare const MAIL_TAG_SAFE: RegExp;
+/** KST 달력일 `YYYYMMDD` 인가 — 8자리이면서 실제 달력에 있는 날(20261399 ✗, 20240229 ✓). */
+export declare function isKstDateStamp(value: string | null | undefined): boolean;
 /** UTM 축의 고정 순서. */
 export declare const UTM_ORDER: readonly ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "utm_id"];
 export type UtmKey = (typeof UTM_ORDER)[number];

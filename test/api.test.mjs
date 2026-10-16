@@ -104,6 +104,9 @@ test("옛 팔로업 판정 — 슬러그 목록은 인자로 받는다", () => {
   assert.equal(m.isLegacyFollowupContent({ content: "initech", slugs }), true)
   assert.equal(m.isLegacyFollowupContent({ content: "Initech_20261001", slugs }), true)
   assert.equal(m.isLegacyFollowupContent({ content: "initechx", slugs }), false)
+  // 옛 슬러그로 시작하는 새 캠페인명은 팔로업이 아니다 — 날짜 8자리만 뒤에 올 수 있다
+  assert.equal(m.isLegacyFollowupContent({ content: "initech_jp_20261016", slugs }), false)
+  assert.equal(m.isLegacyFollowupContent({ content: "initech_2026", slugs }), false)
   assert.equal(m.isLegacyFollowupContent({ content: null, slugs }), false)
   assert.equal(m.isLegacyFollowupContent({ content: "acme", slugs: [] }), false)
   assert.equal(m.isLegacyFollowupContent({ content: "_x", slugs: [""] }), false)
@@ -147,4 +150,23 @@ test("checkEmailUtm — 자리 규칙", () => {
   assert.equal(m.checkEmailUtm(`<a data-mds="main" href="https://rinda.ai/">x</a>`).length, 1)
   assert.ok(m.mailTagErrors(new URL("https://rinda.ai/?utm_medium=email&utm_source=letter&utm_campaign=x")).length >= 2)
   assert.deepEqual(m.mailTagErrors(new URL("https://rinda.ai/?a=1")), [])
+})
+
+test("isKstDateStamp — 8자리이면서 달력에 있는 날", () => {
+  assert.equal(m.isKstDateStamp("20261015"), true)
+  assert.equal(m.isKstDateStamp("20240229"), true)
+  assert.equal(m.isKstDateStamp("20250229"), false)
+  assert.equal(m.isKstDateStamp("20261399"), false)
+  assert.equal(m.isKstDateStamp("2026-10-15"), false)
+  assert.equal(m.isKstDateStamp(null), false)
+})
+
+test("checkEmailUtm — 세일즈 메일은 content <이름>_<YYYYMMDD> 가 있어야 하고, 작은따옴표 href 도 본다", () => {
+  const noContent = "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup"
+  assert.equal(m.checkEmailUtm(`<a href="${noContent}">x</a>`).length, 1)
+  const badDate = "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=coldmail&utm_content=kbeauty_jp_20261399"
+  assert.equal(m.checkEmailUtm(`<a href="${badDate}">x</a>`).length, 1)
+  const ok = "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=coldmail&utm_content=kbeauty_jp_20261015"
+  assert.deepEqual(m.checkEmailUtm(`<a href='${ok}'>x</a>`), [])
+  assert.equal(m.checkEmailUtm(`<a href='https://rinda.ai/?utm_source=email&utm_medium=newsletter&utm_campaign=coldmail&utm_content=a_20261015'>x</a>`).length, 1)
 })

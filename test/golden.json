@@ -186,6 +186,15 @@
         "kind": "partners_t1",
         "url": "https://rinda.ai/"
       }
+    },
+    {
+      "name": "coldmail 달력 밖 날짜",
+      "in": {
+        "kind": "coldmail",
+        "url": "https://rinda.ai/",
+        "campaignName": "kbeauty_jp",
+        "sendDate": "20261399"
+      }
     }
   ]
 }
