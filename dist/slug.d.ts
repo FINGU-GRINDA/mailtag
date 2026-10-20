@@ -21,10 +21,13 @@ export declare function kstDateStamp(at?: Date | number | {
 export declare const WEBMAIL_LABELS: ReadonlySet<string>;
 /**
  * 상대 메일 주소 → followup content 의 고객사 슬러그(mail.acme.co.kr → acme).
- * 웹메일이면 `webmail`. 주소를 못 읽으면 null — 호출부는 태그 없이 맨 주소를 쓴다(틀린 슬러그보다 낫다).
+ * 웹메일(naver·gmail…)이면 도메인으로 회사를 알 수 없으니 브랜드 영문명(`brand`)을 쓴다 — `webmail` 로
+ * 묶으면 어느 고객사가 가입했는지 나눌 수 없다(2026-10-20 김다미님). 브랜드도 없거나 주소를 못 읽으면
+ * null — 호출부는 태그 없이 맨 주소를 쓴다(틀린 슬러그보다 낫다).
  */
-export declare function followupCompanySlug({ email }: {
+export declare function followupCompanySlug({ email, brand, }: {
     email?: string | null;
+    brand?: string | null;
 }): string | null;
 /**
  * 고객사 레코드 → followup content 의 고객사 슬러그. 옛 손 슬러그가 회사 도메인

@@ -5,9 +5,9 @@
  * |---|---|
  * | utm_source | 메일 종류(kind)로 정해진다 — `MAIL_KIND_SOURCE` |
  * | utm_medium | `email` 고정 |
- * | utm_campaign | 세일즈 메일은 `coldmail`·`followup` 고정, 회차 메일은 `YYYYMMDD`, 그 밖은 메일 종류 키 |
+ * | utm_campaign | 콜드메일 `coldmail`, 1:1 팔로업은 콜드메일 유입이면 `followup`·그 밖의 유입이면 `followup_<유입경로>`, 회차 메일은 `YYYYMMDD`, 그 밖은 메일 종류 키 |
  * | utm_content | 세일즈 메일은 `<이름>_<YYYYMMDD>`, 제품·리드 메일은 식별자(글 슬러그·A/B 변형·자료키) |
- * | utm_term | 링크 자리 — `main_<이름>`·`sub_<이름>`·`bnr`/`bnr_a`/`bnr_b`·`txt_<이름>`·`img_<이름>` |
+ * | utm_term | 제품·리드 메일은 링크 자리 — `main_<이름>`·`sub_<이름>`·`bnr`/`bnr_a`/`bnr_b`·`txt_<이름>`·`img_<이름>`. 세일즈 메일은 접두어 없는 이름(`signup`·`signature`) |
  * | utm_id | 제품·리드 메일의 맨 끝 희생 슬롯(`nl`·`u1`·`w3`·`n1`·`f1`…). 세일즈 메일은 금지 |
  *
  * 순서는 source→medium→campaign→content→term→id. 입력 주소에 있던 utm_* 는 지우고 다른 쿼리·fragment
@@ -16,6 +16,8 @@
  *
  * 파트너스 고객사 대행 콜드메일은 대상이 아니다 — 고객사 이름으로 나가는 메일이라 kind 에 없다.
  */
+
+import { isPositionTerm } from "./term.js"
 
 /** 메일 종류 → utm_source. coldmail·followup 은 세일즈 메일이라 source 가 `email` 이다. */
 export const MAIL_KIND_SOURCE = {
@@ -97,6 +99,21 @@ export type MailTagInput = {
   company?: string | null
   /** coldmail = 발송 시작일, followup = 발송일. KST `YYYYMMDD`. */
   sendDate?: string | null
+  /**
+   * followup — 그 고객사가 들어온 경로(`voucher`·`fair`·`referral`·`inbound` 등). 비우거나 `coldmail` 이면
+   * campaign=`followup`, 그 밖이면 campaign=`followup_<inflow>` (2026-10-20 김다미님 결정).
+   */
+  inflow?: string | null
+}
+
+/** 1:1 팔로업의 utm_campaign. 콜드메일 유입(또는 모름)은 `followup`, 그 밖은 `followup_<유입경로>`. */
+export function followupCampaign({ inflow }: { inflow?: string | null }): string {
+  const v = inflow ?? ""
+  if (!v || v === "coldmail") return "followup"
+  if (!MAIL_TAG_SAFE.test(v)) {
+    throw new Error(`mailtag: inflow 「${v}」 은 ^[a-z0-9_]+$ 여야 한다`)
+  }
+  return `followup_${v}`
 }
 
 /** 세일즈 메일(coldmail·followup)의 campaign·content 를 정한다. id 가 붙으면 거절한다. */
@@ -113,7 +130,12 @@ function salesAxes(input: MailTagInput): { campaign: string; content: string } {
       `mailtag: ${input.kind} 에는 ${input.kind === "coldmail" ? "campaignName" : "company"} 이 필요하다`,
     )
   }
-  return { campaign: input.kind, content: `${name}_${input.sendDate}` }
+  // 세일즈팀은 메일에 링크만 쓴다 — 버튼·글자·이미지를 나누는 자리 접두어가 정보를 더하지 않는다(2026-10-20 김다미님).
+  if (input.term && isPositionTerm(input.term)) {
+    throw new Error(`mailtag: ${input.kind} 메일의 utm_term 「${input.term}」 에 자리 접두어를 붙이지 않는다(예 signup)`)
+  }
+  const campaign = input.kind === "coldmail" ? "coldmail" : followupCampaign({ inflow: input.inflow })
+  return { campaign, content: `${name}_${input.sendDate}` }
 }
 
 /** 추적 링크 하나. 규칙을 어기는 값(모르는 kind·규칙 밖 문자·날짜 형식·세일즈 메일의 id)이면 던진다. */
@@ -162,12 +184,13 @@ export function coldmailTagUrl(p: {
   return mailTagUrl({ kind: "coldmail", ...p })
 }
 
-/** 세일즈 1:1 팔로업(답장·미팅 후속). campaign=followup, content=<고객사슬러그>_<발송일>. */
+/** 세일즈 1:1 팔로업(답장·미팅 후속). campaign=followup(_<유입경로>), content=<고객사슬러그>_<발송일>. */
 export function followupTagUrl(p: {
   url: string
   company: string
   sendDate: string
   term?: string | null
+  inflow?: string | null
 }): string {
   return mailTagUrl({ kind: "followup", ...p })
 }

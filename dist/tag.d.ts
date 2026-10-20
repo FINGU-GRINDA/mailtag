@@ -5,9 +5,9 @@
  * |---|---|
  * | utm_source | 메일 종류(kind)로 정해진다 — `MAIL_KIND_SOURCE` |
  * | utm_medium | `email` 고정 |
- * | utm_campaign | 세일즈 메일은 `coldmail`·`followup` 고정, 회차 메일은 `YYYYMMDD`, 그 밖은 메일 종류 키 |
+ * | utm_campaign | 콜드메일 `coldmail`, 1:1 팔로업은 콜드메일 유입이면 `followup`·그 밖의 유입이면 `followup_<유입경로>`, 회차 메일은 `YYYYMMDD`, 그 밖은 메일 종류 키 |
  * | utm_content | 세일즈 메일은 `<이름>_<YYYYMMDD>`, 제품·리드 메일은 식별자(글 슬러그·A/B 변형·자료키) |
- * | utm_term | 링크 자리 — `main_<이름>`·`sub_<이름>`·`bnr`/`bnr_a`/`bnr_b`·`txt_<이름>`·`img_<이름>` |
+ * | utm_term | 제품·리드 메일은 링크 자리 — `main_<이름>`·`sub_<이름>`·`bnr`/`bnr_a`/`bnr_b`·`txt_<이름>`·`img_<이름>`. 세일즈 메일은 접두어 없는 이름(`signup`·`signature`) |
  * | utm_id | 제품·리드 메일의 맨 끝 희생 슬롯(`nl`·`u1`·`w3`·`n1`·`f1`…). 세일즈 메일은 금지 |
  *
  * 순서는 source→medium→campaign→content→term→id. 입력 주소에 있던 utm_* 는 지우고 다른 쿼리·fragment
@@ -63,7 +63,16 @@ export type MailTagInput = {
     company?: string | null;
     /** coldmail = 발송 시작일, followup = 발송일. KST `YYYYMMDD`. */
     sendDate?: string | null;
+    /**
+     * followup — 그 고객사가 들어온 경로(`voucher`·`fair`·`referral`·`inbound` 등). 비우거나 `coldmail` 이면
+     * campaign=`followup`, 그 밖이면 campaign=`followup_<inflow>` (2026-10-20 김다미님 결정).
+     */
+    inflow?: string | null;
 };
+/** 1:1 팔로업의 utm_campaign. 콜드메일 유입(또는 모름)은 `followup`, 그 밖은 `followup_<유입경로>`. */
+export declare function followupCampaign({ inflow }: {
+    inflow?: string | null;
+}): string;
 /** 추적 링크 하나. 규칙을 어기는 값(모르는 kind·규칙 밖 문자·날짜 형식·세일즈 메일의 id)이면 던진다. */
 export declare function mailTagUrl(input: MailTagInput): string;
 /** 세일즈 콜드메일. campaign=coldmail, content=<캠페인명>_<발송시작일>. */
@@ -73,10 +82,11 @@ export declare function coldmailTagUrl(p: {
     sendDate: string;
     term?: string | null;
 }): string;
-/** 세일즈 1:1 팔로업(답장·미팅 후속). campaign=followup, content=<고객사슬러그>_<발송일>. */
+/** 세일즈 1:1 팔로업(답장·미팅 후속). campaign=followup(_<유입경로>), content=<고객사슬러그>_<발송일>. */
 export declare function followupTagUrl(p: {
     url: string;
     company: string;
     sendDate: string;
     term?: string | null;
+    inflow?: string | null;
 }): string;

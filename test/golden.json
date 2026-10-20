@@ -1,5 +1,5 @@
 {
-  "_doc": "린다 메일 링크 UTM(mailtag) 정답 목록(2026-10-15 결정). 이 패키지의 mailTagUrl 이 cases 를 그대로 만들고 errors 를 전부 거절해야 한다. 규칙을 바꿀 때는 이 파일을 먼저 고친다.",
+  "_doc": "린다 메일 링크 UTM(mailtag) 정답 목록(2026-10-15 결정, 2026-10-20 1:1 팔로업 유입 경로·세일즈 term 접두어 제거). 이 패키지의 mailTagUrl 이 cases 를 그대로 만들고 errors 를 전부 거절해야 한다. 규칙을 바꿀 때는 이 파일을 먼저 고친다.",
   "cases": [
     {
       "name": "coldmail 기본",
@@ -18,9 +18,9 @@
         "url": "https://app.rinda.ai/",
         "campaignName": "kbeauty_jp",
         "sendDate": "20261015",
-        "term": "main_trial"
+        "term": "trial"
       },
-      "out": "https://app.rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=coldmail&utm_content=kbeauty_jp_20261015&utm_term=main_trial"
+      "out": "https://app.rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=coldmail&utm_content=kbeauty_jp_20261015&utm_term=trial"
     },
     {
       "name": "followup 1:1 팔로업",
@@ -39,9 +39,33 @@
         "url": "https://rinda.ai/",
         "company": "globex",
         "sendDate": "20261016",
-        "term": "txt_signature"
+        "term": "signature"
       },
-      "out": "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=globex_20261016&utm_term=txt_signature"
+      "out": "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=globex_20261016&utm_term=signature"
+    },
+    {
+      "name": "followup 콜드메일 외 유입(지원사업)",
+      "in": {
+        "kind": "followup",
+        "url": "https://app.rinda.ai/",
+        "company": "acme",
+        "sendDate": "20261020",
+        "term": "signup",
+        "inflow": "voucher"
+      },
+      "out": "https://app.rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup_voucher&utm_content=acme_20261020&utm_term=signup"
+    },
+    {
+      "name": "followup 콜드메일 유입은 followup",
+      "in": {
+        "kind": "followup",
+        "url": "https://app.rinda.ai/",
+        "company": "acme",
+        "sendDate": "20261020",
+        "term": "signup",
+        "inflow": "coldmail"
+      },
+      "out": "https://app.rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=acme_20261020&utm_term=signup"
     },
     {
       "name": "기존 utm 제거·다른 쿼리·fragment 보존",
@@ -194,6 +218,36 @@
         "url": "https://rinda.ai/",
         "campaignName": "kbeauty_jp",
         "sendDate": "20261399"
+      }
+    },
+    {
+      "name": "세일즈 term 자리 접두어",
+      "in": {
+        "kind": "followup",
+        "url": "https://app.rinda.ai/",
+        "company": "acme",
+        "sendDate": "20261020",
+        "term": "txt_signup"
+      }
+    },
+    {
+      "name": "coldmail term 자리 접두어",
+      "in": {
+        "kind": "coldmail",
+        "url": "https://app.rinda.ai/",
+        "campaignName": "kbeauty_jp",
+        "sendDate": "20261020",
+        "term": "main_trial"
+      }
+    },
+    {
+      "name": "followup 유입 경로 대문자",
+      "in": {
+        "kind": "followup",
+        "url": "https://app.rinda.ai/",
+        "company": "acme",
+        "sendDate": "20261020",
+        "inflow": "Voucher"
       }
     }
   ]

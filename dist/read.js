@@ -20,16 +20,27 @@ export function isLegacyFollowupContent({ content, slugs, }) {
     });
 }
 /**
- * source=email 유입이 세일즈 1:1 팔로업인가 — campaign=followup, 또는 campaign=coldmail 이면서
+ * source=email 유입이 세일즈 1:1 팔로업인가 — campaign=followup·followup_<유입경로>, 또는 campaign=coldmail 이면서
  * content 가 옛 팔로업 슬러그(`slugs`). 나머지 source=email 은 콜드메일이다.
  */
 export function isSalesFollowupMail(v) {
     if (low(v.source) !== "email")
         return false;
     const campaign = low(v.campaign);
-    if (campaign === "followup")
+    if (followupInflow(campaign))
         return true;
     return campaign === "coldmail" && isLegacyFollowupContent({ content: v.content, slugs: v.slugs });
+}
+/**
+ * 1:1 팔로업 campaign → 유입 경로. `followup` 은 `coldmail`(콜드메일 유입), `followup_<x>` 는 `x`,
+ * 팔로업이 아니면 null. 2026-10-20 부터 콜드메일이 아닌 유입은 campaign 에 경로를 붙인다.
+ */
+export function followupInflow(campaign) {
+    const c = low(campaign);
+    if (c === "followup")
+        return "coldmail";
+    const m = c.match(/^followup_([a-z0-9_]+)$/);
+    return m ? (m[1] ?? null) : null;
 }
 /**
  * 옛 1:1 팔로업 링크로 «도착한» 행인가 — source=email · campaign=coldmail · content 가 옛 슬러그.

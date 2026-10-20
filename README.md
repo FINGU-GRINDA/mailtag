@@ -14,9 +14,9 @@
 |---|---|
 | `utm_source` | 메일 종류(kind)마다 정해진 값입니다. coldmail·followup → `email`, letter → `letter`, release → `release`, welcome → `welcome`, lifecycle → `lifecycle`, system → `system`, lead → `lead` |
 | `utm_medium` | 항상 `email` |
-| `utm_campaign` | coldmail은 `coldmail`, followup은 `followup`으로 고정합니다. 회차 메일은 `YYYYMMDD`, 넛지는 type_key, 리드 메일은 `freetool_<도구키>`(무료도구) 또는 `leadmagnet`(자료 다운로드)입니다 |
-| `utm_content` | coldmail은 `<캠페인명>_<발송시작일 YYYYMMDD>`, followup은 `<고객사슬러그>_<발송일 YYYYMMDD>`입니다. 제품·리드 메일에는 식별자(글 슬러그, A/B 변형, 자료키)를 넣습니다 |
-| `utm_term` | 링크 자리를 나타냅니다. `main_<이름>`·`sub_<이름>`·`bnr`/`bnr_a`/`bnr_b`·`txt_<이름>`·`img_<이름>` |
+| `utm_campaign` | coldmail은 `coldmail`입니다. followup은 콜드메일로 들어온 고객사면 `followup`, 그 밖의 경로(지원사업·박람회·소개·인바운드 등)로 들어온 고객사면 `followup_<유입경로>`(예 `followup_voucher`)입니다(2026-10-20). 회차 메일은 `YYYYMMDD`, 넛지는 type_key, 리드 메일은 `freetool_<도구키>`(무료도구) 또는 `leadmagnet`(자료 다운로드)입니다 |
+| `utm_content` | coldmail은 `<캠페인명>_<발송시작일 YYYYMMDD>`, followup은 `<고객사슬러그>_<발송일 YYYYMMDD>`입니다. 고객사슬러그는 회사 메일 도메인 이름이고, 상대가 웹메일(naver·gmail 등)을 쓰면 브랜드 영문명입니다(2026-10-20, `webmail` 로 묶지 않습니다). 제품·리드 메일에는 식별자(글 슬러그, A/B 변형, 자료키)를 넣습니다 |
+| `utm_term` | 제품·리드 메일은 링크 자리를 나타냅니다. `main_<이름>`·`sub_<이름>`·`bnr`/`bnr_a`/`bnr_b`·`txt_<이름>`·`img_<이름>`. 세일즈 메일(coldmail·followup)은 링크만 쓰므로 접두어 없이 이름만 씁니다(`signup`·`signature`, 2026-10-20). 접두어가 붙으면 오류를 던집니다 |
 | `utm_id` | 제품·리드 메일에만 맨 끝 희생 슬롯으로 붙입니다(`nl`·`u1`·`w3`·`n1`·`f1`·`l1`…). 세일즈 메일(coldmail·followup)에는 붙이지 않습니다 |
 
 - 순서는 source → medium → campaign → content → term → id이고, 값이 빈 축은 생략합니다.
@@ -28,8 +28,9 @@
 
 | 함수 | 판정 |
 |---|---|
+| `followupInflow(campaign)` | `followup` → `coldmail`, `followup_<x>` → `x`, 팔로업이 아니면 null |
 | `isLeadMailUtm({ source, medium, campaign })` | 비회원 리드 메일 여부를 봅니다. 아래 조건 중 하나라도 맞으면 참입니다. 제품 메일·콜드메일 판정보다 **먼저** 불러야 합니다 |
-| `isSalesFollowupMail({ source, campaign, content, slugs })` | source=email이면서 campaign=followup이면 참입니다. campaign=coldmail이라도 content가 옛 팔로업 슬러그면 참입니다 |
+| `isSalesFollowupMail({ source, campaign, content, slugs })` | source=email이면서 campaign=followup·followup_<유입경로>면 참입니다. campaign=coldmail이라도 content가 옛 팔로업 슬러그면 참입니다 |
 | `isLegacyFollowupArrival({ source, campaign, content, slugs })` | 옛 1:1 팔로업 링크로 도착한 행인지 봅니다(source=email · campaign=coldmail · content가 옛 슬러그) |
 | `isLegacyFollowupContent({ content, slugs })` | content가 `slugs`의 값과 같거나 `<슬러그>_…`로 시작하는지 봅니다 |
 
@@ -67,9 +68,10 @@ import { mailTagUrl, followupCompanySlug, kstDateStamp } from "@fingu-grinda/mai
 mailTagUrl({
   kind: "followup",
   url: "https://rinda.ai/",
-  company: followupCompanySlug({ email: "kim@example.co.kr" }),
+  company: followupCompanySlug({ email: "kim@example.co.kr", brand: "Example" }),
   sendDate: kstDateStamp(),
-  term: "txt_signature",
+  term: "signature",
+  inflow: "coldmail", // 콜드메일 외 유입이면 voucher·fair·referral·inbound 등
 })
 ```
 
@@ -78,10 +80,10 @@ mailTagUrl({
 | 분류 | 이름 |
 |---|---|
 | 종류·상수 | `MAIL_KIND_SOURCE` · `MailKind` · `ProductMailKind` · `PRODUCT_MAIL_SOURCES` · `LEAD_MAIL_SOURCES` · `MAIL_TAG_SAFE` · `UTM_ORDER` · `UtmKey` · `isMailKind` |
-| 링크 만들기 | `mailTagUrl(input: MailTagInput)` · `coldmailTagUrl({ url, campaignName, sendDate, term? })` · `followupTagUrl({ url, company, sendDate, term? })` |
-| 자리(term) | `mailTerm.{main,sub,bnr,txt,img}` · `mailTermName` · `mailTermNameFromUrl` · `MAIL_TERM_RULE` · `EmailLinkRole` · `isLegacyPositionContent` |
+| 링크 만들기 | `mailTagUrl(input: MailTagInput)` · `coldmailTagUrl({ url, campaignName, sendDate, term? })` · `followupTagUrl({ url, company, sendDate, term?, inflow? })` · `followupCampaign({ inflow? })` |
+| 자리(term) | `isPositionTerm` · `salesTermName`(옛 `txt_signature` → `signature`) · `mailTerm.{main,sub,bnr,txt,img}` · `mailTermName` · `mailTermNameFromUrl` · `MAIL_TERM_RULE` · `EmailLinkRole` · `isLegacyPositionContent` |
 | 게이트 | `mailTagErrors(url: URL)` · `checkEmailUtm(html)` · `decodeEntities` |
-| 슬러그·날짜 | `toUtmSlug` · `kstDateStamp(Date \| ms \| { atMs })` · `followupCompanySlug({ email })` · `companyUtmSlug({ id, name, email?, website? })` · `WEBMAIL_LABELS` |
+| 슬러그·날짜 | `toUtmSlug` · `kstDateStamp(Date \| ms \| { atMs })` · `followupCompanySlug({ email, brand? })`(웹메일이면 brand, 없으면 null) · `companyUtmSlug({ id, name, email?, website? })` · `WEBMAIL_LABELS` |
 | 받는 쪽 판정 | `isLeadMailUtm` · `LEGACY_LEAD_MAIL_SOURCES` · `LegacyFollowupSlugs`(타입) · `isLegacyFollowupContent` · `isSalesFollowupMail` · `isLegacyFollowupArrival` |
 
 `MailTagInput`의 선택 필드는 `null`도 받고, `undefined`와 똑같이 취급합니다. `kind`는 `MailKind`(문자열 리터럴 유니온)입니다.
@@ -93,7 +95,7 @@ mailTagUrl({
 | ara `src/core/content/mailtag.ts` | `MAIL_TAG_SOURCE` | `MAIL_KIND_SOURCE` | 값은 같습니다 |
 | ara | `MailTagKind` | `MailKind` | |
 | ara | `MailTagInput.kind: string` | `kind: MailKind` | 호출부가 리터럴(`'followup'`)이라 그대로 통과합니다 |
-| ara | `followupCompanySlug({ email })` · `WEBMAIL_LABELS` · `kstDateStamp({ atMs })` | 같은 이름 | 시그니처도 같습니다 |
+| ara | `followupCompanySlug({ email, brand? })`(웹메일이면 brand, 없으면 null) · `WEBMAIL_LABELS` · `kstDateStamp({ atMs })` | 같은 이름 | 시그니처도 같습니다 |
 | rinda-landing `src/lib/mailtag.ts` | `isLeadMailArrival({ source, medium })` | `isLeadMailUtm({ source, medium, campaign })` | 아래 «레포에 남기는 것»을 보세요. 랜딩은 정규화와 `medium=nudge` 단독 판정을 감싸는 함수를 남깁니다 |
 | rinda-landing | `MailTagInput.kind: string` | `kind: MailKind` | |
 | rinda-landing | `toUtmSlug` · `kstDateStamp(date?)` · `LEGACY_LEAD_MAIL_SOURCES` · `MAIL_KIND_SOURCE` · `MailKind` · `mailTagUrl` | 같은 이름 | |

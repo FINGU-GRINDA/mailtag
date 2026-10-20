@@ -7,6 +7,7 @@
 
 export {
   coldmailTagUrl,
+  followupCampaign,
   followupTagUrl,
   isKstDateStamp,
   isMailKind,
@@ -24,14 +25,17 @@ export {
 export {
   type EmailLinkRole,
   isLegacyPositionContent,
+  isPositionTerm,
   MAIL_TERM_RULE,
   mailTerm,
   mailTermName,
   mailTermNameFromUrl,
+  salesTermName,
 } from "./term.js"
 export { checkEmailUtm, decodeEntities, mailTagErrors } from "./check.js"
 export { companyUtmSlug, followupCompanySlug, kstDateStamp, toUtmSlug, WEBMAIL_LABELS } from "./slug.js"
 export {
+  followupInflow,
   isLeadMailUtm,
   isLegacyFollowupArrival,
   isLegacyFollowupContent,

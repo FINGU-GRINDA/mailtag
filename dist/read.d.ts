@@ -19,7 +19,7 @@ export declare function isLegacyFollowupContent({ content, slugs, }: {
     slugs: LegacyFollowupSlugs;
 }): boolean;
 /**
- * source=email 유입이 세일즈 1:1 팔로업인가 — campaign=followup, 또는 campaign=coldmail 이면서
+ * source=email 유입이 세일즈 1:1 팔로업인가 — campaign=followup·followup_<유입경로>, 또는 campaign=coldmail 이면서
  * content 가 옛 팔로업 슬러그(`slugs`). 나머지 source=email 은 콜드메일이다.
  */
 export declare function isSalesFollowupMail(v: {
@@ -28,6 +28,11 @@ export declare function isSalesFollowupMail(v: {
     content?: Maybe;
     slugs: LegacyFollowupSlugs;
 }): boolean;
+/**
+ * 1:1 팔로업 campaign → 유입 경로. `followup` 은 `coldmail`(콜드메일 유입), `followup_<x>` 는 `x`,
+ * 팔로업이 아니면 null. 2026-10-20 부터 콜드메일이 아닌 유입은 campaign 에 경로를 붙인다.
+ */
+export declare function followupInflow(campaign: Maybe): string | null;
 /**
  * 옛 1:1 팔로업 링크로 «도착한» 행인가 — source=email · campaign=coldmail · content 가 옛 슬러그.
  * content 는 도착 순간에만 실리고 이후 행은 content 없이 남으므로, 읽는 쪽은 이 판정으로 «옛 팔로업으로
