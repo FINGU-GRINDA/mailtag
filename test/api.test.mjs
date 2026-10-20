@@ -49,12 +49,19 @@ test("followupCompanySlug — 회사 도메인", () => {
   assert.equal(f("a@sub.example.io"), "example")
 })
 
-test("followupCompanySlug — 웹메일 목록은 webmail", () => {
+test("followupCompanySlug — 웹메일이면 브랜드 영문명, 브랜드가 없으면 null", () => {
   for (const d of ["gmail.com", "googlemail.com", "naver.com", "daum.net", "hanmail.net", "kakao.com", "nate.com",
     "outlook.com", "hotmail.com", "live.com", "msn.com", "yahoo.co.jp", "icloud.com", "me.com", "mac.com", "aol.com",
     "proton.me", "protonmail.com", "gmx.de", "yandex.ru", "qq.com", "163.com", "126.com"]) {
-    assert.equal(m.followupCompanySlug({ email: `x@${d}` }), "webmail", d)
+    assert.equal(m.followupCompanySlug({ email: `x@${d}` }), null, d)
+    assert.equal(m.followupCompanySlug({ email: `x@${d}`, brand: "Glow Barrier" }), "glow_barrier", d)
   }
+  // 회사 도메인이 있으면 브랜드보다 도메인이 먼저다
+  assert.equal(m.followupCompanySlug({ email: "kim@acme.co.kr", brand: "Other" }), "acme")
+  // 주소가 없어도 브랜드가 있으면 쓴다
+  assert.equal(m.followupCompanySlug({ email: null, brand: "Acme" }), "acme")
+  // 한글 브랜드만 있으면 태그하지 않는다
+  assert.equal(m.followupCompanySlug({ email: "x@naver.com", brand: "글로우" }), null)
   assert.equal(m.WEBMAIL_LABELS.has("gmail"), true)
 })
 
@@ -69,8 +76,8 @@ test("followupCompanySlug — 못 읽으면 null", () => {
 test("followupCompanySlug 결과로 followup 링크를 만든다", () => {
   const company = m.followupCompanySlug({ email: "kim@acme.co.kr" })
   assert.equal(
-    m.followupTagUrl({ url: "https://rinda.ai/", company, sendDate: "20261015", term: "txt_signature" }),
-    "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=acme_20261015&utm_term=txt_signature",
+    m.followupTagUrl({ url: "https://rinda.ai/", company, sendDate: "20261015", term: "signature" }),
+    "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=acme_20261015&utm_term=signature",
   )
 })
 
@@ -169,4 +176,34 @@ test("checkEmailUtm — 세일즈 메일은 content <이름>_<YYYYMMDD> 가 있�
   const ok = "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=coldmail&utm_content=kbeauty_jp_20261015"
   assert.deepEqual(m.checkEmailUtm(`<a href='${ok}'>x</a>`), [])
   assert.equal(m.checkEmailUtm(`<a href='https://rinda.ai/?utm_source=email&utm_medium=newsletter&utm_campaign=coldmail&utm_content=a_20261015'>x</a>`).length, 1)
+})
+
+test("1:1 팔로업 유입 경로 — campaign 만들기와 읽기", () => {
+  assert.equal(m.followupCampaign({}), "followup")
+  assert.equal(m.followupCampaign({ inflow: "coldmail" }), "followup")
+  assert.equal(m.followupCampaign({ inflow: "fair" }), "followup_fair")
+  assert.throws(() => m.followupCampaign({ inflow: "박람회" }))
+  assert.equal(m.followupInflow("followup"), "coldmail")
+  assert.equal(m.followupInflow("followup_voucher"), "voucher")
+  assert.equal(m.followupInflow("Followup_Fair"), "fair")
+  assert.equal(m.followupInflow("coldmail"), null)
+  assert.equal(m.followupInflow("followupx"), null)
+  assert.equal(m.isSalesFollowupMail({ source: "email", campaign: "followup_voucher", slugs: [] }), true)
+  assert.equal(m.isSalesFollowupMail({ source: "letter", campaign: "followup_voucher", slugs: [] }), false)
+})
+
+test("세일즈 메일 term — 접두어 없음, 옛 값은 읽을 때 접두어를 뗀다", () => {
+  assert.equal(m.isPositionTerm("txt_signup"), true)
+  assert.equal(m.isPositionTerm("bnr_a"), true)
+  assert.equal(m.isPositionTerm("signup"), false)
+  assert.equal(m.salesTermName("txt_signature"), "signature")
+  assert.equal(m.salesTermName("main_trial"), "trial")
+  assert.equal(m.salesTermName("signup"), "signup")
+  assert.equal(m.salesTermName(null), "")
+  const old = "https://app.rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=acme_20261020&utm_term=txt_signup"
+  assert.equal(m.checkEmailUtm(`<a href="${old}">x</a>`).length, 1)
+  const ok = "https://app.rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup_fair&utm_content=acme_20261020&utm_term=signup"
+  assert.deepEqual(m.checkEmailUtm(`<a href="${ok}">x</a>`), [])
+  // 제품 메일은 자리 접두어를 그대로 쓴다
+  assert.equal(m.mailTagUrl({ kind: "letter", url: "https://rinda.ai/", campaign: "20261020", term: "main_home", id: "nl" }).includes("utm_term=main_home"), true)
 })

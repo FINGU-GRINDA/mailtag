@@ -50,6 +50,20 @@ export function mailTermNameFromUrl(url: string): string {
   return mailTermName(named[named.length - 1] ?? "") || "home"
 }
 
+/** 자리 접두어(`main_`·`sub_`·`txt_`·`img_`·`bnr`)가 붙은 term 인가. 세일즈 메일에는 붙이지 않는다. */
+export function isPositionTerm(term: string): boolean {
+  return /^(main|sub|txt|img)_/.test(term) || /^bnr(_[ab])?$/.test(term)
+}
+
+/**
+ * 세일즈 메일 term → 자리 접두어를 뗀 이름. 2026-10-20 이전 링크(`txt_signature`)와 이후 링크(`signature`)를
+ * 집계에서 한 줄로 묶을 때 쓴다. `bnr` 계열은 이름이 없어 그대로 둔다.
+ */
+export function salesTermName(term: string | null | undefined): string {
+  const t = (term ?? "").trim().toLowerCase()
+  return t.replace(/^(main|sub|txt|img)_/, "")
+}
+
 /** 옛 규칙에서 자리를 content 에 넣던 값 — 다시 태그할 때 content 로 물려받지 않는다. */
 export function isLegacyPositionContent(content: string): boolean {
   return /^(main|sub|txt|img)_/.test(content) || /^bnr(_[ab])?$/.test(content)

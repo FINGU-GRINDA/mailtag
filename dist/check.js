@@ -8,7 +8,7 @@
 import { isKstDateStamp, LEAD_MAIL_SOURCES, MAIL_TAG_SAFE, PRODUCT_MAIL_SOURCES, UTM_ORDER } from "./tag.js";
 /** 세일즈 메일 content — `<이름>_<YYYYMMDD>`. */
 const SALES_CONTENT = /^[a-z0-9_]+_(\d{8})$/;
-import { MAIL_TERM_RULE } from "./term.js";
+import { isPositionTerm, MAIL_TERM_RULE } from "./term.js";
 /** href 안의 HTML 엔티티를 푼다(`&amp;` → `&` 등). */
 export function decodeEntities(text) {
     return text
@@ -49,8 +49,12 @@ export function mailTagErrors(url) {
         }
     }
     if (sales) {
-        if (campaign !== "coldmail" && campaign !== "followup") {
-            errors.push(`세일즈 메일 campaign 은 coldmail·followup 이어야 한다`);
+        if (campaign !== "coldmail" && !/^followup(_[a-z0-9_]+)?$/.test(campaign)) {
+            errors.push(`세일즈 메일 campaign 은 coldmail·followup·followup_<유입경로> 여야 한다`);
+        }
+        const term = p.get("utm_term");
+        if (term && isPositionTerm(term)) {
+            errors.push(`세일즈 메일 utm_term 「${term}」 에는 자리 접두어를 붙이지 않는다`);
         }
         if (p.has("utm_id")) {
             errors.push(`세일즈 메일에는 utm_id 가 없어야 한다`);

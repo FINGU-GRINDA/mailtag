@@ -1,6 +1,6 @@
 {
   "name": "@fingu-grinda/mailtag",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Rinda mail link UTM tagging (single source)",
   "private": true,
   "type": "module",
