@@ -1,5 +1,8 @@
 # @fingu-grinda/mailtag
 
+## 요약
+린다(Rinda) 메일 링크에 붙이는 UTM 태그 규칙(mailtag)의 단일 정본 TypeScript 패키지다. 보내는 쪽은 `mailTagUrl` 등으로 메일 종류(coldmail·followup·letter·release·lifecycle·system·lead)별 `utm_*` 를 붙이고, 받는 쪽은 `isLeadMailUtm`·`isSalesFollowupMail` 등으로 방문이 어떤 메일에서 왔는지 판정한다. 런타임 의존성 없는 순수 ESM 이고 빌드된 `dist/` 를 커밋해 git 태그(최신 `v2.0.0`)로 설치한다. 운영 중이며 규칙 변경은 `test/golden.json` 부터 고친다.
+
 린다 메일 링크 UTM(mailtag) 규칙을 담은 단일 정본 패키지입니다. 메일을 보내는 쪽(링크에 UTM 붙이기)과 유입을 읽는 쪽(어느 메일에서 왔는지 판정)이 같은 코드를 씁니다.
 
 예전에는 send-grid-test·rinda-landing·ara·deal-tracker-webapp 네 레포가 같은 규칙을 각자 복사해 두고 있었습니다. 그러다 보니 한쪽만 고쳐져 집계가 어긋나는 일이 생겼습니다. 이제 규칙은 이 저장소에만 두고, 네 레포는 git 태그로 받아 씁니다.
@@ -49,15 +52,15 @@
 ```json
 {
   "dependencies": {
-    "@fingu-grinda/mailtag": "github:FINGU-GRINDA/mailtag#v1.0.0"
+    "@fingu-grinda/mailtag": "github:FINGU-GRINDA/mailtag#v2.0.0"
   }
 }
 ```
 
 ```bash
-bun add github:FINGU-GRINDA/mailtag#v1.0.0
-npm i github:FINGU-GRINDA/mailtag#v1.0.0
-pnpm add github:FINGU-GRINDA/mailtag#v1.0.0
+bun add github:FINGU-GRINDA/mailtag#v2.0.0
+npm i github:FINGU-GRINDA/mailtag#v2.0.0
+pnpm add github:FINGU-GRINDA/mailtag#v2.0.0
 ```
 
 공개 저장소라서 설치할 때 토큰이 필요 없습니다. 빌드 결과(`dist`)가 저장소에 들어 있어 설치 중에 빌드 스크립트도 돌지 않습니다.
