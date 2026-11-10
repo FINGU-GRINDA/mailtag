@@ -54,7 +54,7 @@ export const MAIL_KIND_LABEL: Readonly<Record<MailKind, string>> = {
   welcome: "가입 환영 메일",
   letter: "린다레터",
   release: "업데이트 노트",
-  lead: "자료 받기 메일",
+  lead: "비회원 리드 메일",
 }
 /** 회원에게 가는 제품 메일 종류. */
 export type ProductMailKind = Exclude<MailKind, "rinda_campaign" | "personal" | "lead">

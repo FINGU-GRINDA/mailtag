@@ -49,7 +49,7 @@ export const MAIL_KIND_LABEL = {
     welcome: "가입 환영 메일",
     letter: "린다레터",
     release: "업데이트 노트",
-    lead: "자료 받기 메일",
+    lead: "비회원 리드 메일",
 };
 /** 바이어에게 가는 메일의 utm_source. */
 export const SALES_MAIL_SOURCES = ["rinda_campaign", "personal"];
