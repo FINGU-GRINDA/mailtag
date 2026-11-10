@@ -3,7 +3,7 @@
 ## 요약
 린다(Rinda) 메일 링크에 붙이는 UTM 태그 규칙(mailtag)의 단일 정본 TypeScript 패키지다. 보내는 쪽은 `mailTagUrl` 로 메일 종류(rinda_campaign·personal·nudge·welcome·letter·release·lead)별 `utm_*` 를 붙이고, 받는 쪽은 `mailKindOf`·`isLeadMailUtm`·`isSalesFollowupMail` 등으로 방문이 어떤 메일에서 왔는지 판정한다(옛 값도 지금 종류로 묶는다). 런타임 의존성 없는 순수 ESM 이고 빌드된 `dist/` 를 커밋해 git 태그(최신 `v3.0.0`)로 설치한다. 운영 중이며 규칙 변경은 `test/golden.json` 부터 고친다.
 
-린다 메일 링크 UTM(mailtag) 규칙을 담은 단일 정본 패키지입니다. 메일을 보내는 쪽(링크에 UTM 붙이기)과 유입을 읽는 쪽(어느 메일에서 왔는지 판정)이 같은 코드를 씁니다.
+린다 메일 링크 UTM(mailtag) 규칙을 담은 단일 정본 패키지입니다. v3 부터 **메일 UTM 의 정본은 이 패키지 하나**이고, 랜딩은 메일 규칙·이름을 따로 두지 않고 이 패키지를 가져다 보여 주기만 합니다(메일이 아닌 UTM — SNS·광고·박람회·블로그 — 은 랜딩 DB `utm_rules` 가 정본으로 남습니다). 메일 링크는 코드가 만들기 때문에, 메일 규칙을 바꾸려면 어차피 이 패키지가 바뀌어야 합니다. 메일을 보내는 쪽(링크에 UTM 붙이기)과 유입을 읽는 쪽(어느 메일에서 왔는지 판정)이 같은 코드를 씁니다.
 
 예전에는 send-grid-test·rinda-landing·ara·deal-tracker-webapp 네 레포가 같은 규칙을 각자 복사해 두고 있었습니다. 그러다 보니 한쪽만 고쳐져 집계가 어긋나는 일이 생겼습니다. 이제 규칙은 이 저장소에만 두고, 네 레포는 git 태그로 받아 씁니다.
 
@@ -93,7 +93,7 @@ mailTagUrl({
 
 | 분류 | 이름 |
 |---|---|
-| 종류·상수 | `MAIL_KIND_SOURCE` · `MailKind` · `ProductMailKind` · `SALES_MAIL_SOURCES` · `PRODUCT_MAIL_SOURCES` · `LEAD_MAIL_SOURCES` · `RECIPIENT_PARAM` · `MAIL_TAG_SAFE` · `UTM_ORDER` · `UtmKey` · `isMailKind` |
+| 종류·상수 | `MAIL_KIND_SOURCE` · `MAIL_KIND_LABEL`(화면 이름) · `MailKind` · `ProductMailKind` · `SALES_MAIL_SOURCES` · `PRODUCT_MAIL_SOURCES` · `LEAD_MAIL_SOURCES` · `RECIPIENT_PARAM` · `MAIL_TAG_SAFE` · `UTM_ORDER` · `UtmKey` · `isMailKind` |
 | 링크 만들기 | `mailTagUrl(input: MailTagInput)` · `personalReason({ inflow? })` |
 | 자리(term) | `isPositionTerm` · `salesTermName`(옛 `txt_signature` → `signature`) · `mailTerm.{main,sub,bnr,txt,img}` · `mailTermName` · `mailTermNameFromUrl` · `MAIL_TERM_RULE` · `EmailLinkRole` · `isLegacyPositionContent` |
 | 게이트 | `mailTagErrors(url: URL)` · `checkEmailUtm(html)` · `decodeEntities` |

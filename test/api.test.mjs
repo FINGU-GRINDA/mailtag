@@ -77,6 +77,13 @@ test("followupCompanySlug — 못 읽으면 null", () => {
   assert.equal(m.followupCompanySlug({}), null)
 })
 
+test("MAIL_KIND_LABEL — 메일 종류마다 이름이 하나씩", () => {
+  assert.deepEqual(Object.keys(m.MAIL_KIND_LABEL).sort(), Object.keys(m.MAIL_KIND_SOURCE).sort())
+  assert.equal(m.MAIL_KIND_LABEL.nudge, "넛지 메일")
+  // 옛 값도 이름까지 한 번에: system → nudge → 넛지 메일
+  assert.equal(m.MAIL_KIND_LABEL[m.mailKindOf({ source: "system", campaign: "billing_grace", slugs: [] })], "넛지 메일")
+})
+
 test("personalReason — 들어온 경로 → 담당자 1:1 메일 보낸 이유", () => {
   assert.equal(m.personalReason({}), "from_campaign")
   assert.equal(m.personalReason({ inflow: "coldmail" }), "from_campaign")

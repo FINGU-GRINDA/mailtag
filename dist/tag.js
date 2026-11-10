@@ -37,6 +37,20 @@ export const MAIL_KIND_SOURCE = {
     release: "release",
     lead: "lead",
 };
+/**
+ * 메일 종류 → 화면에 보이는 이름(린다 용어정의서 말). 메일 UTM 의 정본은 이 패키지라서, 랜딩의 유입경로
+ * 화면·알림은 이름표를 따로 두지 않고 이것을 그대로 보여 준다. 넛지·캠페인 하나하나의 이름은 규칙이 아니라
+ * 앱의 데이터라 여기 두지 않는다.
+ */
+export const MAIL_KIND_LABEL = {
+    rinda_campaign: "린다 캠페인 메일",
+    personal: "담당자 1:1 메일",
+    nudge: "넛지 메일",
+    welcome: "가입 환영 메일",
+    letter: "린다레터",
+    release: "업데이트 노트",
+    lead: "자료 받기 메일",
+};
 /** 바이어에게 가는 메일의 utm_source. */
 export const SALES_MAIL_SOURCES = ["rinda_campaign", "personal"];
 /** 제품 메일(회원 메일)의 utm_source. 가입 채널 집계도 이 목록을 쓴다. */

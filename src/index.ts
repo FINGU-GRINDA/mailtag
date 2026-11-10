@@ -9,6 +9,7 @@ export {
   isKstDateStamp,
   isMailKind,
   LEAD_MAIL_SOURCES,
+  MAIL_KIND_LABEL,
   MAIL_KIND_SOURCE,
   MAIL_TAG_SAFE,
   type MailKind,
