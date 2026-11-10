@@ -28,6 +28,10 @@ test("isLeadMailUtm — campaign=nudge 이면서 source 가 email 이 아닌 값
 })
 
 test("isLeadMailUtm — 리드가 아닌 값", () => {
+  // 지금 쓰는 다른 메일 종류는 리드가 아니다
+  for (const source of ["rinda_campaign", "personal", "nudge", "welcome", "letter", "release"]) {
+    assert.equal(m.isLeadMailUtm({ source, medium: "email", campaign: "nudge" }), false, source)
+  }
   // source=email ∧ campaign=nudge 는 옛 제품 메일(넛지)
   assert.equal(m.isLeadMailUtm({ source: "email", medium: "email", campaign: "nudge" }), false)
   // source 가 비면 판정 근거가 없다
@@ -73,11 +77,14 @@ test("followupCompanySlug — 못 읽으면 null", () => {
   assert.equal(m.followupCompanySlug({}), null)
 })
 
-test("followupCompanySlug 결과로 followup 링크를 만든다", () => {
-  const company = m.followupCompanySlug({ email: "kim@acme.co.kr" })
+test("personalReason — 들어온 경로 → 담당자 1:1 메일 보낸 이유", () => {
+  assert.equal(m.personalReason({}), "from_campaign")
+  assert.equal(m.personalReason({ inflow: "coldmail" }), "from_campaign")
+  assert.equal(m.personalReason({ inflow: "voucher" }), "voucher")
+  assert.throws(() => m.personalReason({ inflow: "박람회" }))
   assert.equal(
-    m.followupTagUrl({ url: "https://rinda.ai/", company, sendDate: "20261015", term: "signature" }),
-    "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=acme_20261015&utm_term=signature",
+    m.mailTagUrl({ kind: "personal", url: "https://rinda.ai/", campaign: m.personalReason({ inflow: "fair" }), term: "signature", recipient: "r1" }),
+    "https://rinda.ai/?rid=r1&utm_source=personal&utm_medium=email&utm_campaign=fair&utm_term=signature",
   )
 })
 
@@ -144,8 +151,8 @@ test("mailTagUrl — null 은 빈 값", () => {
     "https://rinda.ai/?utm_source=letter&utm_medium=email&utm_campaign=20261015&utm_id=nl",
   )
   assert.equal(
-    m.coldmailTagUrl({ url: "https://rinda.ai/", campaignName: "kbeauty_jp", sendDate: "20261015" }),
-    "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=coldmail&utm_content=kbeauty_jp_20261015",
+    m.mailTagUrl({ kind: "personal", url: "https://rinda.ai/", campaign: "inbound", recipient: null }),
+    "https://rinda.ai/?utm_source=personal&utm_medium=email&utm_campaign=inbound",
   )
 })
 
@@ -155,7 +162,7 @@ test("checkEmailUtm — 자리 규칙", () => {
   assert.equal(m.checkEmailUtm(`<a data-mds="sub" href="${ok}">x</a>`).length, 1)
   assert.equal(m.checkEmailUtm(`<a data-mds="unsubscribe" href="${ok}">x</a>`).length, 1)
   assert.equal(m.checkEmailUtm(`<a data-mds="main" href="https://rinda.ai/">x</a>`).length, 1)
-  assert.ok(m.mailTagErrors(new URL("https://rinda.ai/?utm_medium=email&utm_source=letter&utm_campaign=x")).length >= 2)
+  assert.equal(m.mailTagErrors(new URL("https://rinda.ai/?utm_medium=email&utm_source=letter&utm_campaign=x")).length, 1)
   assert.deepEqual(m.mailTagErrors(new URL("https://rinda.ai/?a=1")), [])
 })
 
@@ -168,31 +175,68 @@ test("isKstDateStamp — 8자리이면서 달력에 있는 날", () => {
   assert.equal(m.isKstDateStamp(null), false)
 })
 
-test("checkEmailUtm — 세일즈 메일은 content <이름>_<YYYYMMDD> 가 있어야 하고, 작은따옴표 href 도 본다", () => {
-  const noContent = "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup"
-  assert.equal(m.checkEmailUtm(`<a href="${noContent}">x</a>`).length, 1)
-  const badDate = "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=coldmail&utm_content=kbeauty_jp_20261399"
-  assert.equal(m.checkEmailUtm(`<a href="${badDate}">x</a>`).length, 1)
-  const ok = "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=coldmail&utm_content=kbeauty_jp_20261015"
+test("checkEmailUtm — 바이어에게 가는 메일·받는 사람·옛 값", () => {
+  const ok = "https://rinda.ai/?utm_source=rinda_campaign&utm_medium=email&utm_campaign=kr_food_buyer_0421&utm_term=pricing"
   assert.deepEqual(m.checkEmailUtm(`<a href='${ok}'>x</a>`), [])
-  assert.equal(m.checkEmailUtm(`<a href='https://rinda.ai/?utm_source=email&utm_medium=newsletter&utm_campaign=coldmail&utm_content=a_20261015'>x</a>`).length, 1)
+  const personal = "https://rinda.ai/?rid=r1&utm_source=personal&utm_medium=email&utm_campaign=inbound&utm_term=signup"
+  assert.deepEqual(m.checkEmailUtm(`<a href="${personal}">x</a>`), [])
+  // rid 는 UTM 앞, personal 에만
+  assert.equal(m.checkEmailUtm(`<a href="https://rinda.ai/?utm_source=personal&utm_medium=email&utm_campaign=inbound&rid=r1">x</a>`).length, 1)
+  assert.equal(m.checkEmailUtm(`<a href="https://rinda.ai/?rid=r1&${ok.split("?")[1]}">x</a>`).length, 1)
+  assert.equal(m.checkEmailUtm(`<a href="${personal}&utm_id=x">x</a>`).length, 1)
+  // 옛 값으로 새로 보내지 않는다
+  for (const old of [
+    "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=coldmail&utm_content=kbeauty_jp_20261015",
+    "https://app.rinda.ai/?utm_source=system&utm_medium=email&utm_campaign=billing_grace&utm_term=txt_billing&utm_id=s1",
+    "https://app.rinda.ai/?utm_source=lifecycle&utm_medium=email&utm_campaign=trial_ending_1day&utm_term=main_upgrade&utm_id=n1",
+  ]) {
+    assert.equal(m.checkEmailUtm(`<a href="${old}">x</a>`).length, 1, old)
+  }
+  // medium 은 email
+  assert.equal(m.checkEmailUtm(`<a href='https://rinda.ai/?utm_source=rinda_campaign&utm_medium=newsletter&utm_campaign=a'>x</a>`).length, 1)
+  // 제품 메일은 utm_id 가 없어도 된다
+  assert.deepEqual(m.checkEmailUtm(`<a href="https://app.rinda.ai/?utm_source=nudge&utm_medium=email&utm_campaign=trial_ending_1day&utm_term=main_upgrade">x</a>`), [])
 })
 
-test("1:1 팔로업 유입 경로 — campaign 만들기와 읽기", () => {
-  assert.equal(m.followupCampaign({}), "followup")
-  assert.equal(m.followupCampaign({ inflow: "coldmail" }), "followup")
-  assert.equal(m.followupCampaign({ inflow: "fair" }), "followup_fair")
-  assert.throws(() => m.followupCampaign({ inflow: "박람회" }))
+test("옛 1:1 팔로업 유입 경로 읽기", () => {
   assert.equal(m.followupInflow("followup"), "coldmail")
   assert.equal(m.followupInflow("followup_voucher"), "voucher")
   assert.equal(m.followupInflow("Followup_Fair"), "fair")
   assert.equal(m.followupInflow("coldmail"), null)
   assert.equal(m.followupInflow("followupx"), null)
   assert.equal(m.isSalesFollowupMail({ source: "email", campaign: "followup_voucher", slugs: [] }), true)
+  assert.equal(m.isSalesFollowupMail({ source: "personal", campaign: "inbound", slugs: [] }), true)
   assert.equal(m.isSalesFollowupMail({ source: "letter", campaign: "followup_voucher", slugs: [] }), false)
 })
 
-test("세일즈 메일 term — 접두어 없음, 옛 값은 읽을 때 접두어를 뗀다", () => {
+test("mailKindOf — 새 값은 그대로, 옛 값은 지금 종류로 묶는다", () => {
+  const slugs = ["globex"]
+  const k = (source, campaign, content, medium = "email") => m.mailKindOf({ source, medium, campaign, content, slugs })
+  assert.equal(k("rinda_campaign", "kr_food_buyer_0421"), "rinda_campaign")
+  assert.equal(k("personal", "inbound"), "personal")
+  assert.equal(k("nudge", "trial_ending_1day"), "nudge")
+  assert.equal(k("letter", "20261015"), "letter")
+  assert.equal(k("system", "billing_grace"), "nudge")
+  assert.equal(k("Lifecycle", "trial_ending_1day"), "nudge")
+  assert.equal(k("email", "coldmail", "kbeauty_jp_20261015"), "rinda_campaign")
+  assert.equal(k("email", null), "rinda_campaign")
+  assert.equal(k("email", "followup_voucher", "acme_20261020"), "personal")
+  assert.equal(k("email", "coldmail", "globex"), "personal")
+  assert.equal(k("free-tool-email", null, null, null), "lead")
+  assert.equal(k("downloads", "nudge"), "lead")
+  assert.equal(k("google", "brand", null, "cpc"), null)
+  assert.equal(k(null, null), null)
+})
+
+test("personalReasonOf — 새 값·옛 값에서 보낸 이유 읽기", () => {
+  assert.equal(m.personalReasonOf({ source: "personal", campaign: "Inbound" }), "inbound")
+  assert.equal(m.personalReasonOf({ source: "email", campaign: "followup" }), "from_campaign")
+  assert.equal(m.personalReasonOf({ source: "email", campaign: "followup_voucher" }), "voucher")
+  assert.equal(m.personalReasonOf({ source: "email", campaign: "coldmail" }), null)
+  assert.equal(m.personalReasonOf({ source: "nudge", campaign: "inbound" }), null)
+})
+
+test("바이어에게 가는 메일 term — 접두어 없음, 옛 값은 읽을 때 접두어를 뗀다", () => {
   assert.equal(m.isPositionTerm("txt_signup"), true)
   assert.equal(m.isPositionTerm("bnr_a"), true)
   assert.equal(m.isPositionTerm("signup"), false)
@@ -200,9 +244,9 @@ test("세일즈 메일 term — 접두어 없음, 옛 값은 읽을 때 접두�
   assert.equal(m.salesTermName("main_trial"), "trial")
   assert.equal(m.salesTermName("signup"), "signup")
   assert.equal(m.salesTermName(null), "")
-  const old = "https://app.rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=acme_20261020&utm_term=txt_signup"
-  assert.equal(m.checkEmailUtm(`<a href="${old}">x</a>`).length, 1)
-  const ok = "https://app.rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup_fair&utm_content=acme_20261020&utm_term=signup"
+  const prefixed = "https://app.rinda.ai/?utm_source=personal&utm_medium=email&utm_campaign=fair&utm_term=txt_signup"
+  assert.equal(m.checkEmailUtm(`<a href="${prefixed}">x</a>`).length, 1)
+  const ok = "https://app.rinda.ai/?utm_source=personal&utm_medium=email&utm_campaign=fair&utm_term=signup"
   assert.deepEqual(m.checkEmailUtm(`<a href="${ok}">x</a>`), [])
   // 제품 메일은 자리 접두어를 그대로 쓴다
   assert.equal(m.mailTagUrl({ kind: "letter", url: "https://rinda.ai/", campaign: "20261020", term: "main_home", id: "nl" }).includes("utm_term=main_home"), true)

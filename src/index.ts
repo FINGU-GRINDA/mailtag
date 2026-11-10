@@ -6,9 +6,6 @@
  */
 
 export {
-  coldmailTagUrl,
-  followupCampaign,
-  followupTagUrl,
   isKstDateStamp,
   isMailKind,
   LEAD_MAIL_SOURCES,
@@ -19,6 +16,9 @@ export {
   mailTagUrl,
   PRODUCT_MAIL_SOURCES,
   type ProductMailKind,
+  personalReason,
+  RECIPIENT_PARAM,
+  SALES_MAIL_SOURCES,
   UTM_ORDER,
   type UtmKey,
 } from "./tag.js"
@@ -41,5 +41,8 @@ export {
   isLegacyFollowupContent,
   isSalesFollowupMail,
   LEGACY_LEAD_MAIL_SOURCES,
+  LEGACY_NUDGE_SOURCES,
   type LegacyFollowupSlugs,
+  mailKindOf,
+  personalReasonOf,
 } from "./read.js"
