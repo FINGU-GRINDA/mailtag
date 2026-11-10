@@ -5,10 +5,9 @@
  * 발송 전·테스트에서 이 게이트로 한 번 더 걸러 규칙 밖 링크가 나가지 않게 한다.
  * 컴포넌트는 링크에 `data-mds="<자리>"` 를 달고, `checkEmailUtm` 이 그 표시로 자리 규칙까지 본다.
  */
-import { isKstDateStamp, LEAD_MAIL_SOURCES, MAIL_TAG_SAFE, PRODUCT_MAIL_SOURCES, UTM_ORDER } from "./tag.js";
-/** 세일즈 메일 content — `<이름>_<YYYYMMDD>`. */
-const SALES_CONTENT = /^[a-z0-9_]+_(\d{8})$/;
 import { isPositionTerm, MAIL_TERM_RULE } from "./term.js";
+import { MAIL_KIND_SOURCE, MAIL_TAG_SAFE, RECIPIENT_PARAM, SALES_MAIL_SOURCES, UTM_ORDER } from "./tag.js";
+const MAIL_SOURCES = new Set(Object.values(MAIL_KIND_SOURCE));
 /** href 안의 HTML 엔티티를 푼다(`&amp;` → `&` 등). */
 export function decodeEntities(text) {
     return text
@@ -27,48 +26,35 @@ export function mailTagErrors(url) {
     if (first < 0) {
         return errors;
     }
-    const utmKeys = keys.slice(first);
+    // UTM 은 맨 끝 — 받는 사람(rid)도 그 앞에 둔다(맨 끝 값은 클릭 추적기가 망가뜨릴 수 있다).
     const expected = UTM_ORDER.filter((k) => p.has(k));
-    if (utmKeys.join() !== expected.join()) {
-        errors.push(`UTM 은 맨 끝에 source→medium→campaign→content→term→id 순서여야 한다`);
+    if (keys.slice(first).join() !== expected.join()) {
+        errors.push(`UTM 은 맨 끝에 source→medium→campaign→content→term→id 순서여야 한다(${RECIPIENT_PARAM} 는 그 앞)`);
     }
     const source = p.get("utm_source") ?? "";
-    const sales = source === "email";
-    const known = sales || PRODUCT_MAIL_SOURCES.includes(source) || LEAD_MAIL_SOURCES.includes(source);
-    if (!known || p.get("utm_medium") !== "email") {
+    if (!MAIL_SOURCES.has(source) || p.get("utm_medium") !== "email") {
         errors.push(`source 는 메일 종류 값, medium 은 email 이어야 한다`);
     }
-    const campaign = p.get("utm_campaign") ?? "";
-    if (!campaign) {
+    if (!p.get("utm_campaign")) {
         errors.push(`campaign 이 있어야 한다`);
     }
-    for (const key of ["utm_campaign", "utm_content", "utm_term", "utm_id"]) {
+    for (const key of ["utm_campaign", "utm_content", "utm_term", "utm_id", RECIPIENT_PARAM]) {
         const value = p.get(key);
         if (value !== null && !MAIL_TAG_SAFE.test(value)) {
             errors.push(`${key} 「${value}」 은 ^[a-z0-9_]+$ 여야 한다`);
         }
     }
-    if (sales) {
-        if (campaign !== "coldmail" && !/^followup(_[a-z0-9_]+)?$/.test(campaign)) {
-            errors.push(`세일즈 메일 campaign 은 coldmail·followup·followup_<유입경로> 여야 한다`);
-        }
+    if (SALES_MAIL_SOURCES.includes(source)) {
         const term = p.get("utm_term");
         if (term && isPositionTerm(term)) {
-            errors.push(`세일즈 메일 utm_term 「${term}」 에는 자리 접두어를 붙이지 않는다`);
-        }
-        if (p.has("utm_id")) {
-            errors.push(`세일즈 메일에는 utm_id 가 없어야 한다`);
-        }
-        const date = (p.get("utm_content") ?? "").match(SALES_CONTENT)?.[1];
-        if (!date) {
-            errors.push(`세일즈 메일 content 는 <이름>_<YYYYMMDD> 여야 한다`);
-        }
-        else if (!isKstDateStamp(date)) {
-            errors.push(`세일즈 메일 content 의 날짜 「${date}」 는 달력에 없는 날이다`);
+            errors.push(`바이어에게 가는 메일 utm_term 「${term}」 에는 자리 접두어를 붙이지 않는다`);
         }
     }
-    else if (keys[keys.length - 1] !== "utm_id") {
-        errors.push(`제품·리드 메일은 utm_id 가 맨 끝이어야 한다`);
+    if (source === MAIL_KIND_SOURCE.personal && p.has("utm_id")) {
+        errors.push(`personal 메일에는 utm_id 가 없어야 한다`);
+    }
+    if (source !== MAIL_KIND_SOURCE.personal && p.has(RECIPIENT_PARAM)) {
+        errors.push(`${RECIPIENT_PARAM} 는 personal 메일에만 붙는다`);
     }
     return errors;
 }

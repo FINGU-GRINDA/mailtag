@@ -1,10 +1,11 @@
 /**
  * 받는 쪽 판정 — 도착한 UTM 값이 어떤 메일에서 왔는지 읽는다.
  *
- * 규칙이 바뀐 날(2026-10-15) 이전에 나간 링크는 지금도 클릭된다. 그래서 읽는 쪽은 새 값과 옛 값을
- * 함께 봐야 한다. 이 판정이 레포마다 다르면 같은 클릭이 레포마다 다른 채널로 집계된다 — 그래서 한 벌로 둔다.
+ * 규칙이 바뀐 날(2026-10-15, 2026-11 v3) 이전에 나간 링크는 지금도 클릭된다. 그래서 읽는 쪽은 새 값과
+ * 옛 값을 함께 봐야 한다. 이 판정이 레포마다 다르면 같은 클릭이 레포마다 다른 채널로 집계된다 — 그래서 한 벌로 둔다.
  * 라벨 문구·화면 맵·저장 게이트처럼 레포 사정에 묶인 것은 여기 두지 않는다(README 참고).
  */
+import { type MailKind } from "./tag.js";
 type Maybe = string | null | undefined;
 /**
  * 2026-10-15 이전에는 세일즈 1:1 팔로업 전용 campaign 이 없어 팔로업 링크도 utm_campaign=coldmail 로
@@ -19,8 +20,8 @@ export declare function isLegacyFollowupContent({ content, slugs, }: {
     slugs: LegacyFollowupSlugs;
 }): boolean;
 /**
- * source=email 유입이 세일즈 1:1 팔로업인가 — campaign=followup·followup_<유입경로>, 또는 campaign=coldmail 이면서
- * content 가 옛 팔로업 슬러그(`slugs`). 나머지 source=email 은 콜드메일이다.
+ * 담당자 1:1 메일인가 — 새 값 source=personal, 또는 옛 값 source=email 이면서 campaign=followup·followup_<유입경로>,
+ * 또는 campaign=coldmail 이면서 content 가 옛 팔로업 슬러그(`slugs`). 나머지 source=email 은 린다 캠페인 메일이다.
  */
 export declare function isSalesFollowupMail(v: {
     source: Maybe;
@@ -69,4 +70,31 @@ export declare function isLeadMailUtm(v: {
     medium: Maybe;
     campaign: Maybe;
 }): boolean;
+/** 2026-10-15~v3 사이 넛지 메일의 source. 둘 다 지금은 `nudge` 다. */
+export declare const LEGACY_NUDGE_SOURCES: readonly string[];
+/**
+ * 도착한 UTM 이 지금 기준으로 어느 메일 종류인가. 새 값은 그대로, 옛 값은 이렇게 묶는다.
+ *
+ *   source=system·lifecycle                          → nudge
+ *   source=email 이고 담당자 1:1 메일(`isSalesFollowupMail`) → personal
+ *   source=email 의 나머지(coldmail·빈 campaign)      → rinda_campaign
+ *   옛 리드 메일 값(`isLeadMailUtm`)                  → lead
+ *
+ * 메일이 아니거나 모르는 값이면 null. 이름표·채널 집계가 이 함수 하나로 같은 판정을 쓴다.
+ */
+export declare function mailKindOf(v: {
+    source: Maybe;
+    medium?: Maybe;
+    campaign: Maybe;
+    content?: Maybe;
+    slugs: LegacyFollowupSlugs;
+}): MailKind | null;
+/**
+ * 담당자 1:1 메일의 보낸 이유를 읽는다. 새 값은 campaign 그대로, 옛 값 `followup` 은 `from_campaign`,
+ * `followup_<x>` 는 `x`. 담당자 1:1 메일이 아니면 null.
+ */
+export declare function personalReasonOf(v: {
+    source: Maybe;
+    campaign: Maybe;
+}): string | null;
 export {};

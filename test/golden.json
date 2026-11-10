@@ -1,81 +1,56 @@
 {
-  "_doc": "린다 메일 링크 UTM(mailtag) 정답 목록(2026-10-15 결정, 2026-10-20 1:1 팔로업 유입 경로·세일즈 term 접두어 제거). 이 패키지의 mailTagUrl 이 cases 를 그대로 만들고 errors 를 전부 거절해야 한다. 규칙을 바꿀 때는 이 파일을 먼저 고친다.",
+  "_doc": "린다 메일 링크 UTM(mailtag) 정답 목록(2026-10-15 결정 → 2026-11 v3: source 를 메일 계열 폴더로 — rinda_campaign·personal·nudge, 담당자 1:1 메일 받는 사람은 UTM 밖 rid). 이 패키지의 mailTagUrl 이 cases 를 그대로 만들고 errors 를 전부 거절해야 한다. 규칙을 바꿀 때는 이 파일을 먼저 고친다.",
   "cases": [
     {
-      "name": "coldmail 기본",
+      "name": "린다 캠페인 메일 기본",
       "in": {
-        "kind": "coldmail",
+        "kind": "rinda_campaign",
         "url": "https://rinda.ai/pricing",
-        "campaignName": "kbeauty_jp",
-        "sendDate": "20261015"
+        "campaign": "kr_food_buyer_0421"
       },
-      "out": "https://rinda.ai/pricing?utm_source=email&utm_medium=email&utm_campaign=coldmail&utm_content=kbeauty_jp_20261015"
+      "out": "https://rinda.ai/pricing?utm_source=rinda_campaign&utm_medium=email&utm_campaign=kr_food_buyer_0421"
     },
     {
-      "name": "coldmail 버튼 위치",
+      "name": "린다 캠페인 메일 링크 이름·캠페인 id(하이픈 뺀 값)",
       "in": {
-        "kind": "coldmail",
+        "kind": "rinda_campaign",
         "url": "https://app.rinda.ai/",
-        "campaignName": "kbeauty_jp",
-        "sendDate": "20261015",
-        "term": "trial"
+        "campaign": "kr_food_buyer_0421",
+        "term": "trial",
+        "id": "01a012797db470dcbf4c7d014cef0902"
       },
-      "out": "https://app.rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=coldmail&utm_content=kbeauty_jp_20261015&utm_term=trial"
+      "out": "https://app.rinda.ai/?utm_source=rinda_campaign&utm_medium=email&utm_campaign=kr_food_buyer_0421&utm_term=trial&utm_id=01a012797db470dcbf4c7d014cef0902"
     },
     {
-      "name": "followup 1:1 팔로업",
+      "name": "담당자 1:1 메일 받는 사람",
       "in": {
-        "kind": "followup",
+        "kind": "personal",
         "url": "https://app.rinda.ai/",
-        "company": "acme",
-        "sendDate": "20261015"
+        "campaign": "inbound",
+        "term": "signup",
+        "recipient": "r8f3k2"
       },
-      "out": "https://app.rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=acme_20261015"
+      "out": "https://app.rinda.ai/?rid=r8f3k2&utm_source=personal&utm_medium=email&utm_campaign=inbound&utm_term=signup"
     },
     {
-      "name": "followup 서명 링크",
+      "name": "담당자 1:1 메일 캠페인에 답한 곳",
       "in": {
-        "kind": "followup",
+        "kind": "personal",
         "url": "https://rinda.ai/",
-        "company": "globex",
-        "sendDate": "20261016",
+        "campaign": "from_campaign",
         "term": "signature"
       },
-      "out": "https://rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=globex_20261016&utm_term=signature"
+      "out": "https://rinda.ai/?utm_source=personal&utm_medium=email&utm_campaign=from_campaign&utm_term=signature"
     },
     {
-      "name": "followup 콜드메일 외 유입(지원사업)",
+      "name": "기존 utm·rid 제거, 다른 쿼리·fragment 보존",
       "in": {
-        "kind": "followup",
-        "url": "https://app.rinda.ai/",
-        "company": "acme",
-        "sendDate": "20261020",
-        "term": "signup",
-        "inflow": "voucher"
+        "kind": "personal",
+        "url": "https://rinda.ai/pricing?ref=x&utm_source=old&rid=old&utm_campaign=coldmail#plans",
+        "campaign": "voucher",
+        "recipient": "r8f3k2"
       },
-      "out": "https://app.rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup_voucher&utm_content=acme_20261020&utm_term=signup"
-    },
-    {
-      "name": "followup 콜드메일 유입은 followup",
-      "in": {
-        "kind": "followup",
-        "url": "https://app.rinda.ai/",
-        "company": "acme",
-        "sendDate": "20261020",
-        "term": "signup",
-        "inflow": "coldmail"
-      },
-      "out": "https://app.rinda.ai/?utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=acme_20261020&utm_term=signup"
-    },
-    {
-      "name": "기존 utm 제거·다른 쿼리·fragment 보존",
-      "in": {
-        "kind": "followup",
-        "url": "https://rinda.ai/pricing?ref=x&utm_source=old&utm_campaign=coldmail#plans",
-        "company": "initech",
-        "sendDate": "20261015"
-      },
-      "out": "https://rinda.ai/pricing?ref=x&utm_source=email&utm_medium=email&utm_campaign=followup&utm_content=initech_20261015#plans"
+      "out": "https://rinda.ai/pricing?ref=x&rid=r8f3k2&utm_source=personal&utm_medium=email&utm_campaign=voucher#plans"
     },
     {
       "name": "린다레터 회차",
@@ -90,15 +65,14 @@
       "out": "https://rinda.ai/blog/find-buyers?utm_source=letter&utm_medium=email&utm_campaign=20261015&utm_content=find_buyers&utm_term=img_find_buyers&utm_id=nl"
     },
     {
-      "name": "릴리즈노트",
+      "name": "업데이트 노트",
       "in": {
         "kind": "release",
         "url": "https://app.rinda.ai/",
         "campaign": "20261015",
-        "term": "main_open_app",
-        "id": "u1"
+        "term": "main_open_app"
       },
-      "out": "https://app.rinda.ai/?utm_source=release&utm_medium=email&utm_campaign=20261015&utm_term=main_open_app&utm_id=u1"
+      "out": "https://app.rinda.ai/?utm_source=release&utm_medium=email&utm_campaign=20261015&utm_term=main_open_app"
     },
     {
       "name": "웰컴 파트너스 A/B",
@@ -113,26 +87,24 @@
       "out": "https://rinda.ai/partners?utm_source=welcome&utm_medium=email&utm_campaign=welcome&utm_content=partners_link_a&utm_term=bnr_a&utm_id=w3"
     },
     {
-      "name": "라이프사이클 넛지",
+      "name": "넛지 메일(마케팅성)",
       "in": {
-        "kind": "lifecycle",
+        "kind": "nudge",
         "url": "https://app.rinda.ai/upgrade",
         "campaign": "trial_ending_1day",
-        "term": "main_upgrade",
-        "id": "n1"
+        "term": "main_upgrade"
       },
-      "out": "https://app.rinda.ai/upgrade?utm_source=lifecycle&utm_medium=email&utm_campaign=trial_ending_1day&utm_term=main_upgrade&utm_id=n1"
+      "out": "https://app.rinda.ai/upgrade?utm_source=nudge&utm_medium=email&utm_campaign=trial_ending_1day&utm_term=main_upgrade"
     },
     {
-      "name": "시스템 메일 기능 안내",
+      "name": "넛지 메일(거래성)도 같은 source",
       "in": {
-        "kind": "system",
+        "kind": "nudge",
         "url": "https://app.rinda.ai/settings/billing",
         "campaign": "billing_grace",
-        "term": "txt_billing",
-        "id": "s1"
+        "term": "txt_billing"
       },
-      "out": "https://app.rinda.ai/settings/billing?utm_source=system&utm_medium=email&utm_campaign=billing_grace&utm_term=txt_billing&utm_id=s1"
+      "out": "https://app.rinda.ai/settings/billing?utm_source=nudge&utm_medium=email&utm_campaign=billing_grace&utm_term=txt_billing"
     },
     {
       "name": "비회원 무료도구 결과",
@@ -171,37 +143,26 @@
     {
       "name": "대문자 term",
       "in": {
-        "kind": "lifecycle",
+        "kind": "nudge",
         "url": "https://rinda.ai/",
         "campaign": "welcome",
         "term": "Main_Home"
       }
     },
     {
-      "name": "coldmail 에 id",
+      "name": "옛 종류 coldmail",
       "in": {
         "kind": "coldmail",
         "url": "https://rinda.ai/",
-        "campaignName": "kbeauty_jp",
-        "sendDate": "20261015",
-        "id": "cm"
+        "campaign": "coldmail"
       }
     },
     {
-      "name": "coldmail 날짜 형식",
+      "name": "옛 종류 system",
       "in": {
-        "kind": "coldmail",
+        "kind": "system",
         "url": "https://rinda.ai/",
-        "campaignName": "kbeauty_jp",
-        "sendDate": "2026-10-15"
-      }
-    },
-    {
-      "name": "followup 고객사 없음",
-      "in": {
-        "kind": "followup",
-        "url": "https://rinda.ai/",
-        "sendDate": "20261015"
+        "campaign": "billing_grace"
       }
     },
     {
@@ -212,42 +173,80 @@
       }
     },
     {
-      "name": "coldmail 달력 밖 날짜",
+      "name": "린다 캠페인 메일 campaign 없음",
       "in": {
-        "kind": "coldmail",
+        "kind": "rinda_campaign",
+        "url": "https://rinda.ai/"
+      }
+    },
+    {
+      "name": "린다 캠페인 메일 UTM 이름 대문자·하이픈",
+      "in": {
+        "kind": "rinda_campaign",
         "url": "https://rinda.ai/",
-        "campaignName": "kbeauty_jp",
-        "sendDate": "20261399"
+        "campaign": "KR-food"
       }
     },
     {
-      "name": "세일즈 term 자리 접두어",
+      "name": "캠페인 id 하이픈 그대로",
       "in": {
-        "kind": "followup",
-        "url": "https://app.rinda.ai/",
-        "company": "acme",
-        "sendDate": "20261020",
-        "term": "txt_signup"
+        "kind": "rinda_campaign",
+        "url": "https://rinda.ai/",
+        "campaign": "kr_food_buyer_0421",
+        "id": "01a01279-7db4-70dc"
       }
     },
     {
-      "name": "coldmail term 자리 접두어",
+      "name": "린다 캠페인 메일 term 자리 접두어",
       "in": {
-        "kind": "coldmail",
+        "kind": "rinda_campaign",
         "url": "https://app.rinda.ai/",
-        "campaignName": "kbeauty_jp",
-        "sendDate": "20261020",
+        "campaign": "kr_food_buyer_0421",
         "term": "main_trial"
       }
     },
     {
-      "name": "followup 유입 경로 대문자",
+      "name": "린다 캠페인 메일에 받는 사람",
       "in": {
-        "kind": "followup",
+        "kind": "rinda_campaign",
+        "url": "https://rinda.ai/",
+        "campaign": "kr_food_buyer_0421",
+        "recipient": "r8f3k2"
+      }
+    },
+    {
+      "name": "담당자 1:1 메일 보낸 이유 없음",
+      "in": {
+        "kind": "personal",
+        "url": "https://rinda.ai/",
+        "recipient": "r8f3k2"
+      }
+    },
+    {
+      "name": "담당자 1:1 메일에 utm_id",
+      "in": {
+        "kind": "personal",
+        "url": "https://rinda.ai/",
+        "campaign": "inbound",
+        "id": "x1"
+      }
+    },
+    {
+      "name": "담당자 1:1 메일 term 자리 접두어",
+      "in": {
+        "kind": "personal",
         "url": "https://app.rinda.ai/",
-        "company": "acme",
-        "sendDate": "20261020",
-        "inflow": "Voucher"
+        "campaign": "inbound",
+        "term": "txt_signup"
+      }
+    },
+    {
+      "name": "받는 사람 id 대문자",
+      "in": {
+        "kind": "personal",
+        "url": "https://rinda.ai/",
+        "campaign": "inbound",
+        "recipient": "R8F3K2"
       }
     }
   ]
