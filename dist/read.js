@@ -105,9 +105,41 @@ export function isLeadMailUtm(v) {
 /** 2026-10-15~v3 사이 넛지 메일의 source. 둘 다 지금은 `nudge` 다. */
 export const LEGACY_NUDGE_SOURCES = ["system", "lifecycle"];
 /**
+ * 2026-10-15 이전 제품 메일은 source=email 로 나가고 campaign 에 메일 종류 키나 넛지 유형 키를 실었다.
+ * 그 값을 콜드메일(린다 캠페인 메일)로 읽지 않게 지금 종류로 묶는다. 그 뒤로는 이 모양으로 나가지 않아 목록은
+ * 더 늘지 않는다(앱 send-grid 의 가입 채널 집계 LEGACY_PRODUCT_CAMPAIGNS 와 같은 값 + 랜딩 실측 `update news`).
+ */
+export const LEGACY_EMAIL_PRODUCT_CAMPAIGNS = {
+    newsletter: "letter",
+    chuseok_2026: "letter",
+    update_note: "release",
+    "update news": "release",
+    welcome: "welcome",
+    nudge: "nudge",
+    signup_otp: "nudge",
+    password_reset: "nudge",
+    account_deleted: "nudge",
+    account_deletion_scheduled: "nudge",
+    buyer_collection_delivered: "nudge",
+    buyer_search_limit_reached: "nudge",
+    email_daily_limit_reached: "nudge",
+    email_monthly_limit_reached: "nudge",
+    first_reply_received: "nudge",
+    no_campaign_sent_48h: "nudge",
+    signup_no_activity_24h: "nudge",
+    subscription_canceled: "nudge",
+    subscription_expired: "nudge",
+    subscription_started: "nudge",
+    trial_ending_1day: "nudge",
+    trial_ending_3days: "nudge",
+    trial_promo_approved: "nudge",
+    weekly_digest: "nudge",
+};
+/**
  * 도착한 UTM 이 지금 기준으로 어느 메일 종류인가. 새 값은 그대로, 옛 값은 이렇게 묶는다.
  *
  *   source=system·lifecycle                          → nudge
+ *   source=email 이고 옛 제품 메일 campaign(`LEGACY_EMAIL_PRODUCT_CAMPAIGNS`) → 그 종류(letter·release·welcome·nudge)
  *   source=email 이고 담당자 1:1 메일(`isSalesFollowupMail`) → personal
  *   source=email 의 나머지(coldmail·빈 campaign)      → rinda_campaign
  *   옛 리드 메일 값(`isLeadMailUtm`)                  → lead
@@ -122,8 +154,12 @@ export function mailKindOf(v) {
         return source;
     if (LEGACY_NUDGE_SOURCES.includes(source))
         return "nudge";
-    if (source === "email")
+    if (source === "email") {
+        const product = LEGACY_EMAIL_PRODUCT_CAMPAIGNS[low(v.campaign)];
+        if (product)
+            return product;
         return isSalesFollowupMail({ ...v, source }) ? "personal" : "rinda_campaign";
+    }
     return null;
 }
 /**

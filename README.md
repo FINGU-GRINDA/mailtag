@@ -1,7 +1,7 @@
 # @fingu-grinda/mailtag
 
 ## 요약
-린다(Rinda) 메일 링크에 붙이는 UTM 태그 규칙(mailtag)의 단일 정본 TypeScript 패키지다. 보내는 쪽은 `mailTagUrl` 로 메일 종류(rinda_campaign·personal·nudge·welcome·letter·release·lead)별 `utm_*` 를 붙이고, 받는 쪽은 `mailKindOf`·`isLeadMailUtm`·`isSalesFollowupMail` 등으로 방문이 어떤 메일에서 왔는지 판정한다(옛 값도 지금 종류로 묶는다). 런타임 의존성 없는 순수 ESM 이고 빌드된 `dist/` 를 커밋해 git 태그(최신 `v3.0.0`)로 설치한다. 운영 중이며 규칙 변경은 `test/golden.json` 부터 고친다.
+린다(Rinda) 메일 링크에 붙이는 UTM 태그 규칙(mailtag)의 단일 정본 TypeScript 패키지다. 보내는 쪽은 `mailTagUrl` 로 메일 종류(rinda_campaign·personal·nudge·welcome·letter·release·lead)별 `utm_*` 를 붙이고, 받는 쪽은 `mailKindOf`·`isLeadMailUtm`·`isSalesFollowupMail` 등으로 방문이 어떤 메일에서 왔는지 판정한다(옛 값도 지금 종류로 묶는다). 런타임 의존성 없는 순수 ESM 이고 빌드된 `dist/` 를 커밋해 git 태그(최신 `v3.0.1`)로 설치한다. 운영 중이며 규칙 변경은 `test/golden.json` 부터 고친다.
 
 린다 메일 링크 UTM(mailtag) 규칙을 담은 단일 정본 패키지입니다. v3 부터 **메일 UTM 의 정본은 이 패키지 하나**이고, 랜딩은 메일 규칙·이름을 따로 두지 않고 이 패키지를 가져다 보여 주기만 합니다(메일이 아닌 UTM — SNS·광고·박람회·블로그 — 은 랜딩 DB `utm_rules` 가 정본으로 남습니다). 메일 링크는 코드가 만들기 때문에, 메일 규칙을 바꾸려면 어차피 이 패키지가 바뀌어야 합니다. 메일을 보내는 쪽(링크에 UTM 붙이기)과 유입을 읽는 쪽(어느 메일에서 왔는지 판정)이 같은 코드를 씁니다.
 
@@ -35,7 +35,7 @@ source 는 폴더처럼 «어떤 메일인가», campaign 은 그 폴더 안에�
 
 | 함수 | 판정 |
 |---|---|
-| `mailKindOf({ source, medium, campaign, content, slugs })` | 지금 기준 메일 종류. 새 값은 그대로, 옛 값은 `system`·`lifecycle` → `nudge`, `email` 중 담당자 1:1 메일 → `personal`, 나머지 `email` → `rinda_campaign`, 옛 리드 값 → `lead`. 메일이 아니면 null |
+| `mailKindOf({ source, medium, campaign, content, slugs })` | 지금 기준 메일 종류. 새 값은 그대로, 옛 값은 `system`·`lifecycle` → `nudge`, `email` 중 옛 제품 메일 campaign(`LEGACY_EMAIL_PRODUCT_CAMPAIGNS` — newsletter → letter 등) → 그 종류, 담당자 1:1 메일 → `personal`, 나머지 `email` → `rinda_campaign`, 옛 리드 값 → `lead`. 메일이 아니면 null |
 | `personalReasonOf({ source, campaign })` | 담당자 1:1 메일의 보낸 이유. 새 값은 campaign, 옛 `followup` → `from_campaign`, `followup_<x>` → `x` |
 | `followupInflow(campaign)` | 옛 값 읽기용. `followup` → `coldmail`, `followup_<x>` → `x`, 팔로업이 아니면 null |
 | `isLeadMailUtm({ source, medium, campaign })` | 비회원 리드 메일 여부를 봅니다. 아래 조건 중 하나라도 맞으면 참입니다. 제품 메일·콜드메일 판정보다 **먼저** 불러야 합니다 |
@@ -98,7 +98,7 @@ mailTagUrl({
 | 자리(term) | `isPositionTerm` · `salesTermName`(옛 `txt_signature` → `signature`) · `mailTerm.{main,sub,bnr,txt,img}` · `mailTermName` · `mailTermNameFromUrl` · `MAIL_TERM_RULE` · `EmailLinkRole` · `isLegacyPositionContent` |
 | 게이트 | `mailTagErrors(url: URL)` · `checkEmailUtm(html)` · `decodeEntities` |
 | 슬러그·날짜 | `toUtmSlug` · `kstDateStamp(Date \| ms \| { atMs })` · `followupCompanySlug({ email, brand? })`(웹메일이면 brand, 없으면 null) · `companyUtmSlug({ id, name, email?, website? })` · `WEBMAIL_LABELS` |
-| 받는 쪽 판정 | `mailKindOf` · `personalReasonOf` · `isLeadMailUtm` · `LEGACY_LEAD_MAIL_SOURCES` · `LEGACY_NUDGE_SOURCES` · `LegacyFollowupSlugs`(타입) · `isLegacyFollowupContent` · `isSalesFollowupMail` · `isLegacyFollowupArrival` · `followupInflow` |
+| 받는 쪽 판정 | `mailKindOf` · `personalReasonOf` · `isLeadMailUtm` · `LEGACY_LEAD_MAIL_SOURCES` · `LEGACY_NUDGE_SOURCES` · `LEGACY_EMAIL_PRODUCT_CAMPAIGNS` · `LegacyFollowupSlugs`(타입) · `isLegacyFollowupContent` · `isSalesFollowupMail` · `isLegacyFollowupArrival` · `followupInflow` |
 
 `MailTagInput`의 선택 필드는 `null`도 받고, `undefined`와 똑같이 취급합니다. `kind`는 `MailKind`(문자열 리터럴 유니온)입니다.
 

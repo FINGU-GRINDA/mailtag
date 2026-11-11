@@ -42,6 +42,7 @@ export {
   isLegacyFollowupContent,
   isSalesFollowupMail,
   LEGACY_LEAD_MAIL_SOURCES,
+  LEGACY_EMAIL_PRODUCT_CAMPAIGNS,
   LEGACY_NUDGE_SOURCES,
   type LegacyFollowupSlugs,
   mailKindOf,
