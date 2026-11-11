@@ -238,6 +238,10 @@ test("mailKindOf — 새 값은 그대로, 옛 값은 지금 종류로 묶는다
   assert.equal(k("email", "nudge"), "nudge")
   assert.equal(k("email", "Weekly_Digest"), "nudge")
   assert.equal(k("email", "trial_ending_1day"), "nudge")
+  // 링크에서 온 값이라 상속 키가 들어와도 종류가 아닌 값을 돌려주지 않는다
+  assert.equal(k("email", "constructor"), "rinda_campaign")
+  assert.equal(k("email", "__proto__"), "rinda_campaign")
+  assert.equal(k("email", "toString"), "rinda_campaign")
   assert.equal(k("google", "brand", null, "cpc"), null)
   assert.equal(k(null, null), null)
 })

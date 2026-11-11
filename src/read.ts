@@ -190,8 +190,11 @@ export function mailKindOf(v: {
   if (isMailKind(source)) return source
   if (LEGACY_NUDGE_SOURCES.includes(source)) return "nudge"
   if (source === "email") {
-    const product = LEGACY_EMAIL_PRODUCT_CAMPAIGNS[low(v.campaign)]
-    if (product) return product
+    // 자기 키만 본다 — campaign 은 링크에서 오는 값이라 `constructor` 같은 상속 키가 들어오면 함수가 나온다.
+    const campaign = low(v.campaign)
+    if (Object.prototype.hasOwnProperty.call(LEGACY_EMAIL_PRODUCT_CAMPAIGNS, campaign)) {
+      return LEGACY_EMAIL_PRODUCT_CAMPAIGNS[campaign] as MailKind
+    }
     return isSalesFollowupMail({ ...v, source }) ? "personal" : "rinda_campaign"
   }
   return null
