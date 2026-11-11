@@ -19,11 +19,11 @@ source 는 폴더처럼 «어떤 메일인가», campaign 은 그 폴더 안에�
 |---|---|
 | `utm_source` | 메일 종류 이름 그대로입니다. `rinda_campaign`(린다 캠페인 메일, 바이어에게) · `personal`(담당자 1:1 메일, 바이어에게) · `nudge`(유저에게 자동으로 가는 메일 전부 — 거래성·마케팅성 모두) · `welcome` · `letter`(린다레터) · `release`(업데이트 노트) · `lead`(비회원 리드 메일) |
 | `utm_medium` | 항상 `email` |
-| `utm_campaign` | rinda_campaign 은 캠페인마다 지은 UTM 이름(예 `kr_food_buyer_0421`), personal 은 보낸 이유(`from_campaign`·`inbound`·`voucher`·`referral`·`fair`·`cold`·`bounce2026` …, `personalReason` 으로 만듭니다), nudge 는 넛지 유형 키, 회차 메일은 `YYYYMMDD`, 리드 메일은 `freetool_<도구키>`·`leadmagnet` 입니다. 바이어에게 가는 메일은 campaign 이 없으면 오류를 던집니다 |
+| `utm_campaign` | rinda_campaign 은 캠페인마다 지은 UTM 이름(예 `kr_food_buyer_0421`), personal 은 보낸 이유(`PERSONAL_REASONS` 의 값만 — `from_campaign`·`inbound`·`voucher`·`referral`·`fair`·`cold`. 목록 밖 값은 오류를 던집니다), nudge 는 넛지 유형 키, 회차 메일은 `YYYYMMDD`, 리드 메일은 `freetool_<도구키>`·`leadmagnet` 입니다. 바이어에게 가는 메일은 campaign 이 없으면 오류를 던집니다 |
 | `utm_content` | 제품·리드 메일의 식별자(글 슬러그, A/B 변형, 자료키) |
 | `utm_term` | 제품·리드 메일은 링크 자리 `main_<이름>`·`sub_<이름>`·`bnr`/`bnr_a`/`bnr_b`·`txt_<이름>`·`img_<이름>`. 바이어에게 가는 메일은 접두어 없이 이름만(`signup`·`pricing`)이고, 접두어가 붙으면 오류를 던집니다 |
 | `utm_id` | rinda_campaign 은 캠페인 id(선택, 하이픈을 뺀 값). 제품·리드 메일은 희생 슬롯(선택). personal 에는 붙이지 않습니다 |
-| `rid` (UTM 밖) | personal 의 받는 사람 id(선택, `recipient`). 고객사 이름을 링크에 싣지 않으려고 id 로 둡니다. 다른 메일에는 붙이지 않습니다 |
+| `rid` (UTM 밖) | personal 의 받는 사람 id(선택, `recipient`). 받는 사람 메일 주소를 비밀 키로 암호화한 값이고 `mailRecipientId` 로 만듭니다. 고객사 이름·주소를 링크에 그대로 싣지 않으려는 것입니다. 다른 메일에는 붙이지 않습니다 |
 
 - 순서는 `rid` → source → medium → campaign → content → term → id 이고, 값이 빈 축은 생략합니다. `rid` 를 UTM 앞에 두는 까닭은 메일 클릭 추적기가 주소 맨 끝 값 뒤에 제 경로를 이어 붙이기 때문입니다.
 - 입력 주소에 이미 있던 `utm_*`·`rid` 는 지웁니다. 다른 쿼리와 fragment는 그대로 둡니다.
@@ -72,7 +72,7 @@ pnpm add github:FINGU-GRINDA/mailtag#v3.0.0
 공개 저장소라서 설치할 때 토큰이 필요 없습니다. 빌드 결과(`dist`)가 저장소에 들어 있어 설치 중에 빌드 스크립트도 돌지 않습니다.
 
 ```ts
-import { mailTagUrl, personalReason } from "@fingu-grinda/mailtag"
+import { mailRecipientEmail, mailRecipientId, mailTagUrl, personalReason } from "@fingu-grinda/mailtag"
 
 // 린다 캠페인 메일
 mailTagUrl({ kind: "rinda_campaign", url: "https://rinda.ai/pricing", campaign: "kr_food_buyer_0421", term: "pricing" })
@@ -84,17 +84,30 @@ mailTagUrl({
   url: "https://rinda.ai/",
   campaign: personalReason({ inflow: "voucher" }), // 캠페인에 답한 곳이면 from_campaign
   term: "signature",
-  recipient: "r8f3k2", // 받는 사람 id — 고객사 이름을 싣지 않는다
+  // 받는 사람 id — 주소를 암호화한 값. 키는 환경변수에서 읽어 넘긴다(이 패키지에는 키가 없다)
+  recipient: await mailRecipientId({ email: "kim@acme.com", secret: process.env.MAIL_RID_SECRET }),
 })
-// → https://rinda.ai/?rid=r8f3k2&utm_source=personal&utm_medium=email&utm_campaign=voucher&utm_term=signature
+// → https://rinda.ai/?rid=k1_4y2b…&utm_source=personal&utm_medium=email&utm_campaign=voucher&utm_term=signature
+
+// 읽는 쪽 — 키가 있으면 주소로 되돌린다. 손댄 값·다른 키로 만든 값은 null
+await mailRecipientEmail({ rid: "k1_4y2b…", secrets: { 1: process.env.MAIL_RID_SECRET } }) // → "kim@acme.com"
 ```
+
+### 받는 사람 id (`rid`)
+
+- 모양은 `k<키 버전>_<base32 소문자>` 입니다. 같은 주소·같은 키면 어디서 만들든 같은 값이 나와서, 표 없이도 `rid` 만으로 같은 사람을 셉니다.
+- 비밀 키는 32자 이상이어야 하고 **이 저장소에 두지 않습니다**. 만드는 서버와 읽는 서버의 환경변수에만 둡니다.
+- 키를 바꿀 때는 `version` 을 올리고, 읽는 쪽 `secrets` 에 옛 버전 키를 남겨 둡니다. 그래야 이미 나간 링크가 계속 풀립니다.
+- 키가 새면 이미 나간 링크의 주소가 모두 풀립니다. 분석 도구(GA4 등)에는 `rid` 를 가려서 보내세요.
+- 방식: HKDF-SHA256 으로 키 둘을 만들고, HMAC-SHA256(주소) 앞 12바이트를 iv 로 써서 AES-256-CTR 로 암호화합니다(SIV 구성). 풀 때 HMAC 을 다시 계산해 iv 와 같아야만 주소를 돌려줍니다. WebCrypto 만 쓰므로 Node·Bun·브라우저에서 같은 값이 나옵니다.
 
 ## export 목록
 
 | 분류 | 이름 |
 |---|---|
 | 종류·상수 | `MAIL_KIND_SOURCE` · `MAIL_KIND_LABEL`(화면 이름) · `MailKind` · `ProductMailKind` · `SALES_MAIL_SOURCES` · `PRODUCT_MAIL_SOURCES` · `LEAD_MAIL_SOURCES` · `RECIPIENT_PARAM` · `MAIL_TAG_SAFE` · `UTM_ORDER` · `UtmKey` · `isMailKind` |
-| 링크 만들기 | `mailTagUrl(input: MailTagInput)` · `personalReason({ inflow? })` |
+| 링크 만들기 | `mailTagUrl(input: MailTagInput)` · `personalReason({ inflow? })` · `PERSONAL_REASONS`(보낸 이유 목록 = 값 → 화면 이름) · `PersonalReason` · `isPersonalReason` |
+| 받는 사람 id | `mailRecipientId({ email, secret, version? })` · `mailRecipientEmail({ rid, secrets })` · `RECIPIENT_ID_MIN_SECRET` |
 | 자리(term) | `isPositionTerm` · `salesTermName`(옛 `txt_signature` → `signature`) · `mailTerm.{main,sub,bnr,txt,img}` · `mailTermName` · `mailTermNameFromUrl` · `MAIL_TERM_RULE` · `EmailLinkRole` · `isLegacyPositionContent` |
 | 게이트 | `mailTagErrors(url: URL)` · `checkEmailUtm(html)` · `decodeEntities` |
 | 슬러그·날짜 | `toUtmSlug` · `kstDateStamp(Date \| ms \| { atMs })` · `followupCompanySlug({ email, brand? })`(웹메일이면 brand, 없으면 null) · `companyUtmSlug({ id, name, email?, website? })` · `WEBMAIL_LABELS` |

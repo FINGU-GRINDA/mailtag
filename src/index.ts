@@ -8,6 +8,7 @@
 export {
   isKstDateStamp,
   isMailKind,
+  isPersonalReason,
   LEAD_MAIL_SOURCES,
   MAIL_KIND_LABEL,
   MAIL_KIND_SOURCE,
@@ -15,6 +16,8 @@ export {
   type MailKind,
   type MailTagInput,
   mailTagUrl,
+  PERSONAL_REASONS,
+  type PersonalReason,
   PRODUCT_MAIL_SOURCES,
   type ProductMailKind,
   personalReason,
@@ -33,6 +36,7 @@ export {
   mailTermNameFromUrl,
   salesTermName,
 } from "./term.js"
+export { mailRecipientEmail, mailRecipientId, RECIPIENT_ID_MIN_SECRET } from "./rid.js"
 export { checkEmailUtm, decodeEntities, mailTagErrors } from "./check.js"
 export { companyUtmSlug, followupCompanySlug, kstDateStamp, toUtmSlug, WEBMAIL_LABELS } from "./slug.js"
 export {
