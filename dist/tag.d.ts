@@ -76,15 +76,31 @@ export type MailTagInput = {
     term?: string | null;
     /** 린다 캠페인 메일의 캠페인 id 또는 제품·리드 메일의 희생 슬롯. 담당자 1:1 메일에는 금지. */
     id?: string | null;
-    /** 담당자 1:1 메일의 받는 사람 id(`rid`). 다른 메일에는 금지. */
+    /** 담당자 1:1 메일의 받는 사람 id(`rid`, `mailRecipientId` 로 만든다). 다른 메일에는 금지. */
     recipient?: string | null;
 };
 /**
- * 담당자 1:1 메일의 보낸 이유. 캠페인에 답한 곳(또는 모름)은 `from_campaign`, 그 밖은 들어온 경로 그대로
- * (`inbound`·`voucher`·`referral`·`fair`·`cold`·`bounce2026` …). 옛 `followup_<경로>` 의 경로 값을 그대로 받는다.
+ * 담당자 1:1 메일의 보낸 이유 — 닫힌 목록. 값 = `utm_campaign`, 뜻 = 화면에 보이는 이름.
+ * 목록 밖 값으로는 링크를 만들지 않는다: 자유 입력이면 쓰는 쪽마다 `voucher2`·`expo` 같은 값이 생겨
+ * 같은 이유가 여러 줄로 갈린다. 새 이유가 필요하면 여기에 한 줄 더한다.
+ */
+export declare const PERSONAL_REASONS: {
+    /** 린다 캠페인 메일에 답한 곳 — 들어온 경로를 모를 때의 기본값이기도 하다(옛 `followup`). */
+    readonly from_campaign: "캠페인 메일에 답한 곳";
+    readonly inbound: "먼저 문의한 곳";
+    readonly voucher: "지원사업(바우처)";
+    readonly referral: "소개";
+    readonly fair: "박람회·전시회";
+    readonly cold: "담당자가 처음 연락한 곳";
+};
+export type PersonalReason = keyof typeof PERSONAL_REASONS;
+export declare function isPersonalReason(value: string): value is PersonalReason;
+/**
+ * 들어온 경로 → 담당자 1:1 메일의 보낸 이유. 비었거나 옛 값 `coldmail` 이면 `from_campaign`,
+ * 그 밖은 `PERSONAL_REASONS` 의 값이어야 한다(아니면 던진다).
  */
 export declare function personalReason({ inflow }: {
     inflow?: string | null;
-}): string;
+}): PersonalReason;
 /** 추적 링크 하나. 규칙을 어기는 값(모르는 kind·규칙 밖 문자·종류에 맞지 않는 값)이면 던진다. */
 export declare function mailTagUrl(input: MailTagInput): string;

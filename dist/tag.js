@@ -89,15 +89,32 @@ export function isMailKind(value) {
     return Object.prototype.hasOwnProperty.call(MAIL_KIND_SOURCE, value);
 }
 /**
- * 담당자 1:1 메일의 보낸 이유. 캠페인에 답한 곳(또는 모름)은 `from_campaign`, 그 밖은 들어온 경로 그대로
- * (`inbound`·`voucher`·`referral`·`fair`·`cold`·`bounce2026` …). 옛 `followup_<경로>` 의 경로 값을 그대로 받는다.
+ * 담당자 1:1 메일의 보낸 이유 — 닫힌 목록. 값 = `utm_campaign`, 뜻 = 화면에 보이는 이름.
+ * 목록 밖 값으로는 링크를 만들지 않는다: 자유 입력이면 쓰는 쪽마다 `voucher2`·`expo` 같은 값이 생겨
+ * 같은 이유가 여러 줄로 갈린다. 새 이유가 필요하면 여기에 한 줄 더한다.
+ */
+export const PERSONAL_REASONS = {
+    /** 린다 캠페인 메일에 답한 곳 — 들어온 경로를 모를 때의 기본값이기도 하다(옛 `followup`). */
+    from_campaign: "캠페인 메일에 답한 곳",
+    inbound: "먼저 문의한 곳",
+    voucher: "지원사업(바우처)",
+    referral: "소개",
+    fair: "박람회·전시회",
+    cold: "담당자가 처음 연락한 곳",
+};
+export function isPersonalReason(value) {
+    return Object.prototype.hasOwnProperty.call(PERSONAL_REASONS, value);
+}
+/**
+ * 들어온 경로 → 담당자 1:1 메일의 보낸 이유. 비었거나 옛 값 `coldmail` 이면 `from_campaign`,
+ * 그 밖은 `PERSONAL_REASONS` 의 값이어야 한다(아니면 던진다).
  */
 export function personalReason({ inflow }) {
     const v = inflow ?? "";
     if (!v || v === "coldmail")
         return "from_campaign";
-    if (!MAIL_TAG_SAFE.test(v)) {
-        throw new Error(`mailtag: inflow 「${v}」 은 ^[a-z0-9_]+$ 여야 한다`);
+    if (!isPersonalReason(v)) {
+        throw new Error(`mailtag: 보낸 이유 「${v}」 는 목록에 없다(${Object.keys(PERSONAL_REASONS).join("·")})`);
     }
     return v;
 }
@@ -107,6 +124,9 @@ function assertKindRules(input) {
     const sales = kind === "rinda_campaign" || kind === "personal";
     if (sales && !input.campaign) {
         throw new Error(`mailtag: ${kind} 에는 campaign 이 필요하다(${kind === "rinda_campaign" ? "캠페인 UTM 이름" : "보낸 이유"})`);
+    }
+    if (kind === "personal" && input.campaign && !isPersonalReason(input.campaign)) {
+        throw new Error(`mailtag: personal 메일의 보낸 이유 「${input.campaign}」 는 목록에 없다(PERSONAL_REASONS)`);
     }
     if (kind === "personal" && input.id) {
         throw new Error(`mailtag: personal 메일에는 utm_id 를 달지 않는다(받는 사람은 recipient)`);

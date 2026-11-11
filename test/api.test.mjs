@@ -89,6 +89,19 @@ test("personalReason — 들어온 경로 → 담당자 1:1 메일 보낸 이유
   assert.equal(m.personalReason({ inflow: "coldmail" }), "from_campaign")
   assert.equal(m.personalReason({ inflow: "voucher" }), "voucher")
   assert.throws(() => m.personalReason({ inflow: "박람회" }))
+  // 닫힌 목록 — 문법이 맞아도 목록에 없으면 거절한다(자유 입력이면 같은 이유가 여러 줄로 갈린다)
+  assert.throws(() => m.personalReason({ inflow: "voucher2" }), /목록에 없다/)
+  assert.throws(() => m.personalReason({ inflow: "constructor" }))
+  for (const reason of Object.keys(m.PERSONAL_REASONS)) {
+    assert.equal(m.personalReason({ inflow: reason }), reason)
+    assert.equal(m.isPersonalReason(reason), true)
+  }
+  assert.equal(m.isPersonalReason("toString"), false)
+  // mailTagUrl 도 같은 목록으로 막는다 — personalReason 을 건너뛰고 직접 넣어도 새지 않게
+  assert.throws(
+    () => m.mailTagUrl({ kind: "personal", url: "https://rinda.ai/", campaign: "expo" }),
+    /목록에 없다/,
+  )
   assert.equal(
     m.mailTagUrl({ kind: "personal", url: "https://rinda.ai/", campaign: m.personalReason({ inflow: "fair" }), term: "signature", recipient: "r1" }),
     "https://rinda.ai/?rid=r1&utm_source=personal&utm_medium=email&utm_campaign=fair&utm_term=signature",
@@ -268,4 +281,54 @@ test("바이어에게 가는 메일 term — 접두어 없음, 옛 값은 읽을
   assert.deepEqual(m.checkEmailUtm(`<a href="${ok}">x</a>`), [])
   // 제품 메일은 자리 접두어를 그대로 쓴다
   assert.equal(m.mailTagUrl({ kind: "letter", url: "https://rinda.ai/", campaign: "20261020", term: "main_home", id: "nl" }).includes("utm_term=main_home"), true)
+})
+
+// 진짜 키가 아니다 — 비밀 값 검사기가 키로 오인하지 않게 반복 글자로 만든다.
+const RID_SECRET = "mailtag-test-".repeat(4)
+
+test("mailRecipientId · mailRecipientEmail — 만들고 되돌린다", async () => {
+  const rid = await m.mailRecipientId({ email: "  Kim@Acme.com ", secret: RID_SECRET })
+  assert.match(rid, /^k1_[a-z2-7]+$/)
+  assert.match(rid, m.MAIL_TAG_SAFE)
+  assert.equal(await m.mailRecipientEmail({ rid, secrets: { 1: RID_SECRET } }), "kim@acme.com")
+  // 같은 주소·같은 키면 같은 값 — rid 만으로 같은 사람을 센다
+  assert.equal(await m.mailRecipientId({ email: "kim@acme.com", secret: RID_SECRET }), rid)
+  assert.notEqual(await m.mailRecipientId({ email: "lee@acme.com", secret: RID_SECRET }), rid)
+  // 주소가 그대로 보이지 않는다
+  assert.equal(rid.includes("kim"), false)
+  // mailTagUrl 의 recipient 로 그대로 들어간다
+  assert.equal(
+    m.mailTagUrl({ kind: "personal", url: "https://rinda.ai/", campaign: "voucher", recipient: rid }),
+    `https://rinda.ai/?rid=${rid}&utm_source=personal&utm_medium=email&utm_campaign=voucher`,
+  )
+})
+
+test("mailRecipientId — 고정 값(다른 런타임·다음 버전에서도 같은 rid 가 나와야 이미 나간 링크가 풀린다)", async () => {
+  assert.equal(await m.mailRecipientId({ email: "kim@acme.com", secret: RID_SECRET }), "k1_vvkqdk5vyko7nukpxbddiw6dmmwepn5nbhdi4uy")
+})
+
+test("mailRecipientEmail — 손댄 값·다른 키·모양이 다른 값은 null", async () => {
+  const rid = await m.mailRecipientId({ email: "kim@acme.com", secret: RID_SECRET })
+  const other = "other-test-".repeat(4)
+  assert.equal(await m.mailRecipientEmail({ rid, secrets: { 1: other } }), null)
+  assert.equal(await m.mailRecipientEmail({ rid, secrets: {} }), null)
+  assert.equal(await m.mailRecipientEmail({ rid, secrets: { 2: RID_SECRET } }), null)
+  // 글자 하나만 바꿔도 풀리지 않는다(어느 자리든)
+  for (const at of [3, 10, rid.length - 2]) {
+    const swapped = rid.slice(0, at) + (rid[at] === "a" ? "b" : "a") + rid.slice(at + 1)
+    assert.equal(await m.mailRecipientEmail({ rid: swapped, secrets: { 1: RID_SECRET } }), null, String(at))
+  }
+  for (const bad of [null, undefined, "", "r8f3k2", "k1_", "k0_abc", "k1_ABC", "k1_abc!", "constructor", "k1_" + "a".repeat(600)]) {
+    assert.equal(await m.mailRecipientEmail({ rid: bad, secrets: { 1: RID_SECRET } }), null, String(bad))
+  }
+})
+
+test("mailRecipientId — 키 버전·잘못된 입력", async () => {
+  const v2 = await m.mailRecipientId({ email: "kim@acme.com", secret: RID_SECRET, version: 2 })
+  assert.match(v2, /^k2_/)
+  assert.equal(await m.mailRecipientEmail({ rid: v2, secrets: { 1: "x".repeat(40), 2: RID_SECRET } }), "kim@acme.com")
+  await assert.rejects(m.mailRecipientId({ email: "not-an-address", secret: RID_SECRET }))
+  await assert.rejects(m.mailRecipientId({ email: "a b@acme.com", secret: RID_SECRET }))
+  await assert.rejects(m.mailRecipientId({ email: "kim@acme.com", secret: "short" }))
+  await assert.rejects(m.mailRecipientId({ email: "kim@acme.com", secret: RID_SECRET, version: 0 }))
 })
