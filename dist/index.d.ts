@@ -8,4 +8,4 @@ export { isKstDateStamp, isMailKind, LEAD_MAIL_SOURCES, MAIL_KIND_LABEL, MAIL_KI
 export { type EmailLinkRole, isLegacyPositionContent, isPositionTerm, MAIL_TERM_RULE, mailTerm, mailTermName, mailTermNameFromUrl, salesTermName, } from "./term.js";
 export { checkEmailUtm, decodeEntities, mailTagErrors } from "./check.js";
 export { companyUtmSlug, followupCompanySlug, kstDateStamp, toUtmSlug, WEBMAIL_LABELS } from "./slug.js";
-export { followupInflow, isLeadMailUtm, isLegacyFollowupArrival, isLegacyFollowupContent, isSalesFollowupMail, LEGACY_LEAD_MAIL_SOURCES, LEGACY_NUDGE_SOURCES, type LegacyFollowupSlugs, mailKindOf, personalReasonOf, } from "./read.js";
+export { followupInflow, isLeadMailUtm, isLegacyFollowupArrival, isLegacyFollowupContent, isSalesFollowupMail, LEGACY_LEAD_MAIL_SOURCES, LEGACY_EMAIL_PRODUCT_CAMPAIGNS, LEGACY_NUDGE_SOURCES, type LegacyFollowupSlugs, mailKindOf, personalReasonOf, } from "./read.js";
