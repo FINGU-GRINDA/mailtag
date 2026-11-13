@@ -1,5 +1,8 @@
 # @fingu-grinda/mailtag
 
+> **보관됨(2026-11-13).** 이 패키지는 더 쓰지 않는다. 메일 UTM 의 정본은 린다 랜딩이다 — 자주 바뀌는 값 목록은 랜딩 DB `mail_utm_values`, 링크 모양·분류 코드는 랜딩 `src/lib/mail-utm`, 링크 발급은 `/api/landing/utm-links`(Ara `utm_link`). 값 하나 바꾸는 데 패키지 태그와 세 레포 배포가 들어 접었다. 이미 고정된 태그는 그대로 받을 수 있다.
+
+
 ## 요약
 린다(Rinda) 메일 링크에 붙이는 UTM 태그 규칙(mailtag)의 단일 정본 TypeScript 패키지다. 보내는 쪽은 `mailTagUrl` 로 메일 종류(rinda_campaign·personal·nudge·welcome·letter·release·lead)별 `utm_*` 를 붙이고, 받는 쪽은 `mailKindOf`·`isLeadMailUtm`·`isSalesFollowupMail` 등으로 방문이 어떤 메일에서 왔는지 판정한다(옛 값도 지금 종류로 묶는다). 런타임 의존성 없는 순수 ESM 이고 빌드된 `dist/` 를 커밋해 git 태그(최신 `v3.0.2`)로 설치한다. 운영 중이며 규칙 변경은 `test/golden.json` 부터 고친다.
 
